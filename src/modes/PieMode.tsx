@@ -238,7 +238,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         <Mascot mood={finished ? 'cheer' : 'happy'} size={100} />
       </div>
 
-      <div className="absolute top-24 right-3 bg-white/70 rounded-2xl px-3 py-2 backdrop-blur shadow-pop text-sm space-y-1">
+      <div className="absolute top-36 md:top-28 right-3 bg-white/70 rounded-2xl px-3 py-2 backdrop-blur shadow-pop text-sm space-y-1">
         <div>🥧 <b>{cleared}</b>/{level.target}</div>
         <div>💨 <b>{missed}</b></div>
         <div>🎯 <b>{Math.round(stats.accuracy)}%</b></div>
