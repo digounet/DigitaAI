@@ -25,17 +25,9 @@ export function AdSlot({ slotId, minHeight = 90, label = 'Espaço reservado para
 
   useEffect(() => {
     if (!clientId || !slotId) return;
-
-    // Carrega o script do AdSense uma vez só.
-    if (!document.querySelector('script[data-adsense]')) {
-      const s = document.createElement('script');
-      s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
-      s.async = true;
-      s.crossOrigin = 'anonymous';
-      s.setAttribute('data-adsense', '1');
-      document.head.appendChild(s);
-    }
-
+    // O script do adsbygoogle.js é carregado no <head> do index.html
+    // (pré-requisito da verificação de propriedade do AdSense). Aqui só
+    // fazemos o push que ativa o slot renderizado.
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
