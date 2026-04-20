@@ -5,6 +5,7 @@ import { ResultModal } from '../components/ResultModal';
 import { Mascot } from '../components/Mascot';
 import { FINGER_COLORS, FINGER_NAMES, fingerFor } from '../data/fingers';
 import type { Level } from '../data/levels';
+import { getLessonPosition, getWorldMeta } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { playError, playKey, playStar, playWordDone, unlockAudio } from '../audio/sfx';
 
@@ -94,7 +95,17 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
   return (
     <div className="relative flex-1 w-full overflow-hidden flex flex-col">
       <div className="absolute inset-0 clouds-bg pointer-events-none" />
-      <HUD title={`${level.emoji} ${level.title}`} subtitle={level.subtitle} progress={progress} />
+      <HUD
+        title={`${level.emoji} ${level.title}`}
+        subtitle={level.subtitle}
+        progress={progress}
+        worldEmoji={getWorldMeta(level.world)?.emoji}
+        worldLabel={`Mundo ${level.world} · ${getWorldMeta(level.world)?.title ?? ''}`}
+        lessonLabel={(() => {
+          const p = getLessonPosition(level);
+          return `Lição ${p.index}/${p.total}`;
+        })()}
+      />
 
       <div className="flex-1 flex flex-col items-center justify-center pt-24 px-4 pb-2 overflow-y-auto">
         <div className="mb-2 flex items-center gap-3 text-sm text-gray-700">

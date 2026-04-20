@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Pie, pieColor } from '../components/Pie';
 import { Keyboard } from '../components/Keyboard';
@@ -6,6 +6,7 @@ import { HUD } from '../components/HUD';
 import { ResultModal } from '../components/ResultModal';
 import { Mascot } from '../components/Mascot';
 import type { Level } from '../data/levels';
+import { getLessonPosition, getWorldMeta } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
 
@@ -34,66 +35,81 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   const [finished, setFinished] = useState<null | { stars: number; wpm: number; accuracy: number }>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [lastKey, setLastKey] = useState<string | undefined>();
+  const [nextLetter, setNextLetter] = useState<string | undefined>();
   const nextIdRef = useRef(0);
   const { stats, registerHit, registerMiss, reset } = useTypingStats();
 
+  const piesRef = useRef<PieItem[]>([]);
+  const activeIdRef = useRef<number | null>(null);
+  const finishedRef = useRef(false);
+  const clearedRef = useRef(0);
+  const statsStartedAtRef = useRef<number | null>(null);
+  const statsCorrectRef = useRef(0);
+  const statsTotalRef = useRef(0);
+
+  piesRef.current = pies;
+  activeIdRef.current = activeId;
+  finishedRef.current = !!finished;
+  clearedRef.current = cleared;
+  statsStartedAtRef.current = stats.startedAt;
+  statsCorrectRef.current = stats.correct;
+  statsTotalRef.current = stats.total;
+
   const speed = level.speed ?? 10;
 
-  const pickWord = useCallback(() => {
-    const p = level.pool;
-    return p[Math.floor(Math.random() * p.length)];
-  }, [level.pool]);
-
-  const spawn = useCallback(() => {
-    const id = ++nextIdRef.current;
-    const word = pickWord();
-    const x = 5 + Math.random() * 80;
-    setPies((b) => [...b, { id, word, typed: '', x, color: pieColor(id), duration: speed }]);
-  }, [pickWord, speed]);
+  // Calcula próxima letra visível (sem sobrecarregar dependências).
+  useEffect(() => {
+    const active = pies.find((p) => p.id === activeId && !p.popped);
+    if (active) {
+      setNextLetter(active.word[active.typed.length]?.toLowerCase());
+    } else {
+      const alive = pies.find((p) => !p.popped);
+      setNextLetter(alive?.word[0]?.toLowerCase());
+    }
+  }, [pies, activeId]);
 
   useEffect(() => {
     if (finished) return;
-    const maxAtOnce = 3;
-    const every = Math.max(1400, (speed * 1000) / maxAtOnce);
-    spawn();
-    const id = setInterval(() => {
-      setPies((b) => {
-        const alive = b.filter((x) => !x.popped);
-        if (alive.length >= maxAtOnce) return b;
-        const nid = ++nextIdRef.current;
-        const word = level.pool[Math.floor(Math.random() * level.pool.length)];
-        const x = 5 + Math.random() * 80;
-        return [...b, { id: nid, word, typed: '', x, color: pieColor(nid), duration: speed }];
-      });
-    }, every);
+    const maxAtOnce = level.maxAtOnce ?? 2;
+    const every = Math.max(2000, (speed * 1000) / Math.max(1, maxAtOnce));
+    const doSpawn = () => {
+      if (finishedRef.current) return;
+      const aliveCount = piesRef.current.filter((x) => !x.popped).length;
+      if (aliveCount >= maxAtOnce) return;
+      const nid = ++nextIdRef.current;
+      const word = level.pool[Math.floor(Math.random() * level.pool.length)];
+      const x = 5 + Math.random() * 80;
+      setPies((b) => [...b, { id: nid, word, typed: '', x, color: pieColor(nid), duration: speed }]);
+    };
+    doSpawn();
+    const id = setInterval(doSpawn, every);
     return () => clearInterval(id);
-  }, [finished, spawn, speed, level.pool]);
+  }, [finished, speed, level.pool, level.maxAtOnce]);
 
-  const active = useMemo(() => pies.find((p) => p.id === activeId && !p.popped), [pies, activeId]);
-
-  // Seleciona tortinha ativa automaticamente: primeira que combina com a tecla pressionada
+  // Listener estável via refs.
   useEffect(() => {
-    if (finished) return;
     const handler = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (finishedRef.current) return;
       const key = e.key;
       if (key === 'Backspace') {
-        setPies((list) =>
-          list.map((p) => (p.id === activeId ? { ...p, typed: p.typed.slice(0, -1) } : p))
-        );
+        const aid = activeIdRef.current;
+        if (aid !== null) {
+          setPies((list) => list.map((p) => (p.id === aid ? { ...p, typed: p.typed.slice(0, -1) } : p)));
+        }
         return;
       }
       if (key.length !== 1) return;
       unlockAudio();
-      setLastKey(key.toLowerCase());
-      setTimeout(() => setLastKey(undefined), 120);
+      const lk = key.toLowerCase();
+      setLastKey(lk);
+      window.setTimeout(() => setLastKey((k) => (k === lk ? undefined : k)), 120);
       playKey();
 
-      // se não tem pie ativa, escolhe a que começa com a letra
-      let targetId = activeId;
+      let targetId = activeIdRef.current;
       if (targetId === null) {
-        const candidate = pies.find(
-          (p) => !p.popped && p.typed === '' && p.word[0].toLowerCase() === key.toLowerCase()
+        const candidate = piesRef.current.find(
+          (p) => !p.popped && p.typed === '' && p.word[0].toLowerCase() === lk
         );
         if (candidate) {
           targetId = candidate.id;
@@ -104,13 +120,12 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
           return;
         }
       }
-
-      const pie = pies.find((p) => p.id === targetId);
+      const pie = piesRef.current.find((p) => p.id === targetId);
       if (!pie) return;
       const nextChar = pie.word[pie.typed.length];
       if (!nextChar) return;
 
-      if (key.toLowerCase() === nextChar.toLowerCase()) {
+      if (lk === nextChar.toLowerCase()) {
         const newTyped = pie.typed + nextChar;
         registerHit();
         if (newTyped.length === pie.word.length) {
@@ -118,18 +133,19 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
           playWordDone();
           setPies((list) => list.map((p) => (p.id === pie.id ? { ...p, typed: newTyped, popped: true } : p)));
           setActiveId(null);
-          setCleared((c) => {
-            const nc = c + 1;
-            if (nc >= level.target) {
-              const acc = (stats.correct + 1) / Math.max(stats.total + 1, 1) * 100;
-              const wpm = stats.startedAt !== null
-                ? ((stats.correct + 1) / 5) / Math.max((Date.now() - stats.startedAt) / 60000, 1 / 60)
-                : 0;
-              setFinished({ stars: starsFor(acc), wpm, accuracy: acc });
-            }
-            return nc;
-          });
-          setTimeout(() => setPies((list) => list.filter((p) => p.id !== pie.id)), 400);
+          const nc = clearedRef.current + 1;
+          clearedRef.current = nc;
+          setCleared(nc);
+          if (nc >= level.target) {
+            const correct = statsCorrectRef.current + 1;
+            const total = statsTotalRef.current + 1;
+            const startedAt = statsStartedAtRef.current ?? Date.now();
+            const minutes = Math.max((Date.now() - startedAt) / 60000, 1 / 60);
+            const wpm = correct / 5 / minutes;
+            const acc = total === 0 ? 100 : (correct / total) * 100;
+            setFinished({ stars: starsFor(acc), wpm, accuracy: acc });
+          }
+          window.setTimeout(() => setPies((list) => list.filter((p) => p.id !== pie.id)), 400);
         } else {
           setPies((list) => list.map((p) => (p.id === pie.id ? { ...p, typed: newTyped } : p)));
         }
@@ -140,14 +156,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [pies, activeId, registerHit, registerMiss, finished, level.target, stats.correct, stats.total, stats.startedAt]);
-
-  const nextLetter = useMemo(() => {
-    if (active) return active.word[active.typed.length]?.toLowerCase();
-    // sugere a primeira letra da tortinha mais baixa (mais urgente)
-    const alive = pies.filter((p) => !p.popped);
-    return alive[0]?.word[0]?.toLowerCase();
-  }, [pies, active]);
+  }, [level.target, registerHit, registerMiss]);
 
   const handleEscape = useCallback((id: number) => {
     setPies((list) => {
@@ -156,11 +165,11 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         playError();
         setMissed((m) => m + 1);
         registerMiss();
-        if (activeId === id) setActiveId(null);
+        if (activeIdRef.current === id) setActiveId(null);
       }
       return list.filter((x) => x.id !== id);
     });
-  }, [registerMiss, activeId]);
+  }, [registerMiss]);
 
   return (
     <div className="relative flex-1 w-full overflow-hidden">
@@ -171,6 +180,12 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         title={`${level.emoji} ${level.title}`}
         subtitle={level.subtitle}
         progress={cleared / level.target}
+        worldEmoji={getWorldMeta(level.world)?.emoji}
+        worldLabel={`Mundo ${level.world} · ${getWorldMeta(level.world)?.title ?? ''}`}
+        lessonLabel={(() => {
+          const p = getLessonPosition(level);
+          return `Lição ${p.index}/${p.total}`;
+        })()}
       />
 
       <div className="absolute left-3 bottom-28 hidden md:block">

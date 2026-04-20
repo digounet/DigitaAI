@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { LEVELS } from '../data/levels';
 
 export type LevelScore = {
   stars: number;   // 0..3
@@ -9,14 +10,24 @@ export type LevelScore = {
 
 type GameState = {
   playerName: string;
-  scores: Record<string, LevelScore>; // levelId -> best score
+  scores: Record<string, LevelScore>;
   soundOn: boolean;
+  diagnosticDone: boolean;
+  recommendedLevelId: string | null;
   setPlayerName: (name: string) => void;
   recordLevel: (levelId: string, score: LevelScore) => void;
   totalStars: () => number;
-  isUnlocked: (levelId: string, prevId?: string) => boolean;
+  isUnlocked: (levelId: string) => boolean;
   toggleSound: () => void;
+  /** Marca o teste inicial como feito e desbloqueia os níveis anteriores ao recomendado. */
+  applyDiagnostic: (recommendedLevelId: string, wpm: number, accuracy: number) => void;
+  skipDiagnostic: () => void;
+  resetProgress: () => void;
 };
+
+function levelIndex(id: string) {
+  return LEVELS.findIndex((l) => l.id === id);
+}
 
 export const useGame = create<GameState>()(
   persist(
@@ -24,6 +35,8 @@ export const useGame = create<GameState>()(
       playerName: '',
       scores: {},
       soundOn: true,
+      diagnosticDone: false,
+      recommendedLevelId: null,
       setPlayerName: (name) => set({ playerName: name }),
       recordLevel: (levelId, score) =>
         set((s) => {
@@ -37,14 +50,31 @@ export const useGame = create<GameState>()(
             : score;
           return { scores: { ...s.scores, [levelId]: best } };
         }),
-      totalStars: () =>
-        Object.values(get().scores).reduce((a, b) => a + b.stars, 0),
-      isUnlocked: (_levelId, prevId) => {
-        if (!prevId) return true;
-        return (get().scores[prevId]?.stars ?? 0) >= 1;
+      totalStars: () => Object.values(get().scores).reduce((a, b) => a + b.stars, 0),
+      /**
+       * Um nível está desbloqueado se:
+       *  - for o primeiro, ou
+       *  - o nível anterior tem ≥1 estrela, ou
+       *  - está no caminho liberado pelo diagnóstico (até o recomendado, inclusive).
+       */
+      isUnlocked: (levelId) => {
+        const idx = levelIndex(levelId);
+        if (idx <= 0) return true;
+        const prev = LEVELS[idx - 1];
+        const scores = get().scores;
+        if ((scores[prev.id]?.stars ?? 0) >= 1) return true;
+        const recId = get().recommendedLevelId;
+        if (recId) {
+          const recIdx = levelIndex(recId);
+          if (recIdx >= 0 && idx <= recIdx) return true;
+        }
+        return false;
       },
       toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
+      applyDiagnostic: (recId) => set({ diagnosticDone: true, recommendedLevelId: recId }),
+      skipDiagnostic: () => set({ diagnosticDone: true }),
+      resetProgress: () => set({ scores: {}, diagnosticDone: false, recommendedLevelId: null }),
     }),
-    { name: 'digitaai:progress' }
+    { name: 'digitaai:progress', version: 2 }
   )
 );

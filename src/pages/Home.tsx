@@ -1,13 +1,21 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mascot } from '../components/Mascot';
-import { WORLDS, getLevelsByWorld, getPrevLevelId } from '../data/levels';
+import { WORLDS, getLevelsByWorld, LEVELS } from '../data/levels';
 import { useGame } from '../store/gameStore';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { unlockAudio } from '../audio/sfx';
 
 export function Home() {
-  const { totalStars, scores, playerName, setPlayerName } = useGame();
+  const {
+    totalStars,
+    scores,
+    playerName,
+    setPlayerName,
+    diagnosticDone,
+    recommendedLevelId,
+    isUnlocked,
+  } = useGame();
 
   useEffect(() => {
     const unlock = () => unlockAudio();
@@ -18,6 +26,35 @@ export function Home() {
       window.removeEventListener('keydown', unlock);
     };
   }, []);
+
+  const recommendedLevel = recommendedLevelId ? LEVELS.find((l) => l.id === recommendedLevelId) : null;
+
+  /**
+   * Próxima lição a jogar = primeira desbloqueada sem ≥1 estrela.
+   * É o "Continuar aqui".
+   */
+  const nextUpId = useMemo(() => {
+    for (const lv of LEVELS) {
+      if (!isUnlocked(lv.id)) continue;
+      if ((scores[lv.id]?.stars ?? 0) < 1) return lv.id;
+    }
+    return null;
+  }, [scores, isUnlocked]);
+
+  const nextUpLevel = nextUpId ? LEVELS.find((l) => l.id === nextUpId) : null;
+
+  /** Rola até o card do próximo nível ao carregar. */
+  const nextRef = useRef<HTMLAnchorElement | null>(null);
+  useEffect(() => {
+    if (nextRef.current) {
+      nextRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [nextUpId]);
+
+  const globalStats = useMemo(() => {
+    const completed = LEVELS.filter((l) => (scores[l.id]?.stars ?? 0) >= 1).length;
+    return { completed, total: LEVELS.length };
+  }, [scores]);
 
   return (
     <div className="relative flex-1 w-full overflow-y-auto overflow-x-hidden">
@@ -42,6 +79,11 @@ export function Home() {
             <b className="text-xl">{totalStars()}</b>
             <span className="text-gray-500 text-sm">estrelinhas</span>
           </div>
+          <div className="bg-white/85 rounded-full px-4 py-2 shadow-pop flex items-center gap-2">
+            <span className="text-xl">📊</span>
+            <b className="text-lg">{globalStats.completed}</b>
+            <span className="text-gray-500 text-sm">/{globalStats.total} lições</span>
+          </div>
           <input
             type="text"
             value={playerName}
@@ -49,32 +91,97 @@ export function Home() {
             placeholder="Seu nome"
             className="bg-white/85 rounded-full px-4 py-2 shadow-pop outline-none focus:ring-4 focus:ring-candy/40 text-center"
           />
+          <Link
+            to="/test"
+            className="bg-white/85 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
+          >
+            🎯 Teste de nivelamento
+          </Link>
         </div>
+
+        {!diagnosticDone && (
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="mt-4 mx-auto max-w-xl bg-white/90 rounded-3xl shadow-bubbly p-4 md:p-5 flex flex-col md:flex-row items-center gap-3"
+          >
+            <div className="text-5xl">🎯</div>
+            <div className="text-left flex-1">
+              <div className="font-bold text-lg">Nunca digitou antes? Ou já manja?</div>
+              <div className="text-sm text-gray-600">
+                Faça o teste rapidinho e eu te mando pro nível certo.
+              </div>
+            </div>
+            <Link
+              to="/test"
+              className="bg-candy text-white font-bold px-5 py-3 rounded-2xl shadow-pop hover:scale-105 transition whitespace-nowrap"
+            >
+              Fazer o teste
+            </Link>
+          </motion.div>
+        )}
+
+        {nextUpLevel && (
+          <div className="mt-4 mx-auto max-w-xl bg-gradient-to-r from-grass/90 to-mint/90 text-white rounded-3xl shadow-bubbly p-4 md:p-5 flex items-center gap-3">
+            <div className="text-5xl">{nextUpLevel.emoji}</div>
+            <div className="text-left flex-1">
+              <div className="text-xs opacity-90">Continuar de onde parou</div>
+              <div className="font-bold text-lg truncate">
+                Mundo {nextUpLevel.world} · {nextUpLevel.title}
+              </div>
+            </div>
+            <Link
+              to={`/play/${nextUpLevel.id}`}
+              className="bg-white text-grass font-bold px-5 py-3 rounded-2xl shadow-pop hover:scale-105 transition whitespace-nowrap"
+            >
+              Jogar ▶
+            </Link>
+          </div>
+        )}
+
+        {recommendedLevel && !nextUpLevel && (
+          <div className="mt-3 text-sm text-gray-700">
+            ✨ Recomendado pra você: <b>{recommendedLevel.emoji} {recommendedLevel.title}</b>
+          </div>
+        )}
       </header>
 
       <main className="relative z-10 max-w-5xl mx-auto px-3 md:px-6 py-6 pb-40">
         {WORLDS.map((world) => {
           const levels = getLevelsByWorld(world.id);
+          const doneInWorld = levels.filter((l) => (scores[l.id]?.stars ?? 0) >= 1).length;
+          const worldProgress = levels.length === 0 ? 0 : doneInWorld / levels.length;
           return (
             <section key={world.id} className="mb-8">
               <div className={`rounded-3xl p-4 md:p-5 bg-gradient-to-br ${world.color} shadow-bubbly text-white`}>
                 <div className="flex items-center gap-3">
                   <div className="text-4xl md:text-5xl">{world.emoji}</div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h2 className="text-xl md:text-2xl font-bold">Mundo {world.id} — {world.title}</h2>
                     <p className="text-sm opacity-90">{world.desc}</p>
                   </div>
+                  <div className="bg-white/25 rounded-2xl px-3 py-1.5 text-sm font-bold whitespace-nowrap">
+                    {doneInWorld}/{levels.length}
+                  </div>
+                </div>
+                <div className="mt-3 h-2 bg-white/30 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white transition-all duration-500"
+                    style={{ width: `${worldProgress * 100}%` }}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-3">
-                {levels.map((lv) => {
-                  const prev = getPrevLevelId(lv);
-                  const unlocked = !prev || (scores[prev]?.stars ?? 0) >= 1;
+                {levels.map((lv, idx) => {
+                  const unlocked = isUnlocked(lv.id);
                   const score = scores[lv.id];
+                  const recommended = lv.id === recommendedLevelId;
+                  const isNext = lv.id === nextUpId;
                   return (
                     <Link
                       key={lv.id}
+                      ref={isNext ? nextRef : undefined}
                       to={unlocked ? `/play/${lv.id}` : '#'}
                       onClick={(e) => !unlocked && e.preventDefault()}
                       aria-disabled={!unlocked}
@@ -82,9 +189,22 @@ export function Home() {
                         unlocked
                           ? 'bg-white hover:-translate-y-1 hover:shadow-xl cursor-pointer'
                           : 'bg-white/50 cursor-not-allowed'
-                      }`}
+                      } ${recommended ? 'ring-4 ring-sun' : ''} ${isNext && !recommended ? 'ring-4 ring-grass' : ''}`}
                     >
-                      <div className="text-3xl md:text-4xl mb-1">{lv.emoji}</div>
+                      {recommended && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-sun text-gray-900 text-[11px] font-bold px-2 py-0.5 rounded-full shadow-pop whitespace-nowrap">
+                          ✨ começar aqui
+                        </div>
+                      )}
+                      {isNext && !recommended && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-grass text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-pop whitespace-nowrap">
+                          ▶ continuar
+                        </div>
+                      )}
+                      <div className="text-[10px] text-gray-400 font-semibold">
+                        {idx + 1}/{levels.length}
+                      </div>
+                      <div className="text-3xl md:text-4xl">{lv.emoji}</div>
                       <div className="font-bold text-sm md:text-base leading-tight">{lv.title}</div>
                       <div className="text-xs text-gray-500 mt-0.5 line-clamp-2">{lv.subtitle}</div>
                       <div className="mt-2 text-base md:text-lg">

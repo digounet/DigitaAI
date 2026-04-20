@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Balloon, balloonColor } from '../components/Balloon';
 import { Keyboard } from '../components/Keyboard';
@@ -6,6 +6,7 @@ import { HUD } from '../components/HUD';
 import { ResultModal } from '../components/ResultModal';
 import { Mascot } from '../components/Mascot';
 import type { Level } from '../data/levels';
+import { getLessonPosition, getWorldMeta } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
 
@@ -32,77 +33,85 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
   const [missed, setMissed] = useState(0);
   const [finished, setFinished] = useState<null | { stars: number; wpm: number; accuracy: number }>(null);
   const [lastKey, setLastKey] = useState<string | undefined>();
+  const [nextTargetLetter, setNextTargetLetter] = useState<string | undefined>();
   const nextIdRef = useRef(0);
   const { stats, registerHit, registerMiss, reset } = useTypingStats();
 
+  // Refs mantêm valores atuais sem re-registrar listeners/timers.
+  const balloonsRef = useRef<BalloonItem[]>([]);
+  const finishedRef = useRef(false);
+  const clearedRef = useRef(0);
+  const statsStartedAtRef = useRef<number | null>(null);
+  const statsCorrectRef = useRef(0);
+  const statsTotalRef = useRef(0);
+
+  balloonsRef.current = balloons;
+  finishedRef.current = !!finished;
+  clearedRef.current = cleared;
+  statsStartedAtRef.current = stats.startedAt;
+  statsCorrectRef.current = stats.correct;
+  statsTotalRef.current = stats.total;
+
   const speed = level.speed ?? 6;
 
-  const pickLetter = useCallback(() => {
-    const p = level.pool;
-    return p[Math.floor(Math.random() * p.length)];
-  }, [level.pool]);
+  // Atualiza a "próxima letra-alvo" apenas quando a lista muda (não afeta listener).
+  useEffect(() => {
+    const alive = balloons.find((b) => !b.popped);
+    setNextTargetLetter(alive?.letter);
+  }, [balloons]);
 
-  const spawnBalloon = useCallback(() => {
-    const id = ++nextIdRef.current;
-    const letter = pickLetter();
-    const x = 5 + Math.random() * 85;
-    const color = balloonColor(id);
-    setBalloons((b) => [...b, { id, letter, x, color, duration: speed }]);
-  }, [pickLetter, speed]);
-
-  // spawn periódico (respeitando maxAtOnce)
+  // spawn periódico — depende só do nível, não de balloons state (usa ref).
   useEffect(() => {
     if (finished) return;
-    const maxAtOnce = Math.min(5, 2 + Math.floor(level.target / 6));
-    const spawnEvery = Math.max(900, (speed * 1000) / maxAtOnce);
-    spawnBalloon();
-    const id = setInterval(() => {
-      setBalloons((b) => {
-        const alive = b.filter((x) => !x.popped);
-        if (alive.length >= maxAtOnce) return b;
-        const nid = ++nextIdRef.current;
-        const letter = level.pool[Math.floor(Math.random() * level.pool.length)];
-        const x = 5 + Math.random() * 85;
-        return [...b, { id: nid, letter, x, color: balloonColor(nid), duration: speed }];
-      });
-    }, spawnEvery);
+    const maxAtOnce = level.maxAtOnce ?? Math.min(3, 1 + Math.floor(level.target / 8));
+    const spawnEvery = Math.max(1500, (speed * 1000) / Math.max(1, maxAtOnce));
+
+    const doSpawn = () => {
+      if (finishedRef.current) return;
+      const aliveCount = balloonsRef.current.filter((x) => !x.popped).length;
+      if (aliveCount >= maxAtOnce) return;
+      const nid = ++nextIdRef.current;
+      const letter = level.pool[Math.floor(Math.random() * level.pool.length)];
+      const x = 5 + Math.random() * 85;
+      setBalloons((b) => [...b, { id: nid, letter, x, color: balloonColor(nid), duration: speed }]);
+    };
+
+    doSpawn();
+    const id = setInterval(doSpawn, spawnEvery);
     return () => clearInterval(id);
-  }, [finished, spawnBalloon, speed, level.target, level.pool]);
+  }, [finished, speed, level.target, level.pool, level.maxAtOnce]);
 
-  // teclado
+  // Listener de teclado — registrado UMA vez, lê estado via refs.
   useEffect(() => {
-    if (finished) return;
     const handler = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (finishedRef.current) return;
       const key = e.key.toLowerCase();
       if (key.length !== 1) return;
       unlockAudio();
       setLastKey(key);
-      setTimeout(() => setLastKey(undefined), 120);
+      window.setTimeout(() => setLastKey((k) => (k === key ? undefined : k)), 120);
       playKey();
-      // procura balão mais antigo que tem essa letra (ainda não estourado)
-      const target = balloons.find((b) => !b.popped && b.letter.toLowerCase() === key);
+
+      const target = balloonsRef.current.find((b) => !b.popped && b.letter.toLowerCase() === key);
       if (target) {
         playPop();
         registerHit();
         setBalloons((list) => list.map((b) => (b.id === target.id ? { ...b, popped: true } : b)));
-        setCleared((c) => {
-          const nc = c + 1;
-          if (nc >= level.target) {
-            const acc = ((stats.correct + 1) / Math.max(stats.total + 1, 1)) * 100;
-            const wpm =
-              stats.startedAt !== null
-                ? ((stats.correct + 1) / 5) /
-                  Math.max((Date.now() - stats.startedAt) / 60000, 1 / 60)
-                : 0;
-            const stars = starsFor(acc);
-            playWordDone();
-            setFinished({ stars, wpm, accuracy: acc });
-          }
-          return nc;
-        });
-        // remover do DOM depois da animação
-        setTimeout(() => {
+        const nc = clearedRef.current + 1;
+        clearedRef.current = nc;
+        setCleared(nc);
+        if (nc >= level.target) {
+          const correct = statsCorrectRef.current + 1;
+          const total = statsTotalRef.current + 1;
+          const startedAt = statsStartedAtRef.current ?? Date.now();
+          const minutes = Math.max((Date.now() - startedAt) / 60000, 1 / 60);
+          const wpm = correct / 5 / minutes;
+          const acc = total === 0 ? 100 : (correct / total) * 100;
+          playWordDone();
+          setFinished({ stars: starsFor(acc), wpm, accuracy: acc });
+        }
+        window.setTimeout(() => {
           setBalloons((list) => list.filter((b) => b.id !== target.id));
         }, 350);
       } else {
@@ -112,12 +121,7 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [balloons, registerHit, registerMiss, finished, level.target, stats.correct, stats.total, stats.startedAt]);
-
-  const nextTargetLetter = useMemo(() => {
-    const alive = balloons.filter((b) => !b.popped);
-    return alive[0]?.letter;
-  }, [balloons]);
+  }, [level.target, registerHit, registerMiss]);
 
   const handleBalloonEscape = useCallback((id: number) => {
     setBalloons((list) => {
@@ -140,6 +144,12 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
         title={`${level.emoji} ${level.title}`}
         subtitle={level.subtitle}
         progress={cleared / level.target}
+        worldEmoji={getWorldMeta(level.world)?.emoji}
+        worldLabel={`Mundo ${level.world} · ${getWorldMeta(level.world)?.title ?? ''}`}
+        lessonLabel={(() => {
+          const p = getLessonPosition(level);
+          return `Lição ${p.index}/${p.total}`;
+        })()}
       />
 
       <div className="absolute left-3 bottom-28 hidden md:block">
@@ -152,7 +162,6 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
         <div>🎯 <b>{Math.round(stats.accuracy)}%</b></div>
       </div>
 
-      {/* Área de balões */}
       <div className="absolute inset-0 pointer-events-none">
         <AnimatePresence>
           {balloons.map((b) => (
@@ -170,7 +179,6 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
         </AnimatePresence>
       </div>
 
-      {/* Teclado */}
       <div className="absolute bottom-3 left-0 right-0 px-2">
         <Keyboard highlight={nextTargetLetter?.toLowerCase()} lastPressed={lastKey} compact />
       </div>
@@ -203,7 +211,6 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
   );
 }
 
-// Dispara o onFinish uma vez quando o modal aparece (grava progresso).
 function FinishTrigger({ onFinish }: { onFinish: () => void }) {
   const fired = useRef(false);
   useEffect(() => {
