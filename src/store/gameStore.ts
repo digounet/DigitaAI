@@ -12,6 +12,7 @@ type GameState = {
   playerName: string;
   scores: Record<string, LevelScore>;
   soundOn: boolean;
+  musicOn: boolean;
   diagnosticDone: boolean;
   recommendedLevelId: string | null;
   setPlayerName: (name: string) => void;
@@ -19,6 +20,7 @@ type GameState = {
   totalStars: () => number;
   isUnlocked: (levelId: string) => boolean;
   toggleSound: () => void;
+  toggleMusic: () => void;
   /** Marca o teste inicial como feito e desbloqueia os níveis anteriores ao recomendado. */
   applyDiagnostic: (recommendedLevelId: string, wpm: number, accuracy: number) => void;
   skipDiagnostic: () => void;
@@ -35,6 +37,7 @@ export const useGame = create<GameState>()(
       playerName: '',
       scores: {},
       soundOn: true,
+      musicOn: true,
       diagnosticDone: false,
       recommendedLevelId: null,
       setPlayerName: (name) => set({ playerName: name }),
@@ -71,10 +74,27 @@ export const useGame = create<GameState>()(
         return false;
       },
       toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
+      toggleMusic: () => set((s) => ({ musicOn: !s.musicOn })),
       applyDiagnostic: (recId) => set({ diagnosticDone: true, recommendedLevelId: recId }),
       skipDiagnostic: () => set({ diagnosticDone: true }),
       resetProgress: () => set({ scores: {}, diagnosticDone: false, recommendedLevelId: null }),
     }),
-    { name: 'digitaai:progress', version: 2 }
+    {
+      name: 'digitaai:progress',
+      version: 2,
+      migrate: (persisted, fromVersion) => {
+        // v0/v1 → v2: adicionar campos do diagnóstico.
+        const s = (persisted ?? {}) as Partial<GameState>;
+        if (fromVersion < 2) {
+          return {
+            ...s,
+            diagnosticDone: s.diagnosticDone ?? false,
+            recommendedLevelId: s.recommendedLevelId ?? null,
+            musicOn: s.musicOn ?? true,
+          } as GameState;
+        }
+        return s as GameState;
+      },
+    }
   )
 );

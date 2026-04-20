@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useGame } from '../store/gameStore';
 import { setMuted } from '../audio/sfx';
+import { setMusicEnabled, setMusicSuppressed } from '../audio/music';
 import { useEffect } from 'react';
 
 type Props = {
@@ -19,11 +20,18 @@ type Props = {
 };
 
 export function HUD({ title, subtitle, progress, worldLabel, lessonLabel, worldEmoji, right, onPause }: Props) {
-  const { soundOn, toggleSound, totalStars } = useGame();
+  const { soundOn, musicOn, toggleSound, toggleMusic, totalStars } = useGame();
 
   useEffect(() => {
     setMuted(!soundOn);
+    // Quando o som geral está mudo, pausamos a música; quando liga de novo e
+    // musicOn está ativo, volta.
+    setMusicSuppressed(!soundOn);
   }, [soundOn]);
+
+  useEffect(() => {
+    setMusicEnabled(musicOn && soundOn);
+  }, [musicOn, soundOn]);
 
   return (
     <div className="fixed top-0 left-0 right-0 z-30">
@@ -78,8 +86,19 @@ export function HUD({ title, subtitle, progress, worldLabel, lessonLabel, worldE
             </button>
           )}
           <button
+            onClick={toggleMusic}
+            aria-label={musicOn ? 'Desligar música' : 'Ligar música'}
+            title="Música"
+            className={`h-10 w-10 md:h-11 md:w-11 rounded-full shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition ${
+              musicOn ? 'bg-mint' : 'bg-white text-gray-400'
+            }`}
+          >
+            🎵
+          </button>
+          <button
             onClick={toggleSound}
             aria-label={soundOn ? 'Desligar som' : 'Ligar som'}
+            title="Efeitos sonoros"
             className="h-10 w-10 md:h-11 md:w-11 rounded-full bg-white shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition"
           >
             {soundOn ? '🔊' : '🔇'}

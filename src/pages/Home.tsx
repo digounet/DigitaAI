@@ -15,15 +15,25 @@ export function Home() {
     diagnosticDone,
     recommendedLevelId,
     isUnlocked,
+    soundOn,
+    musicOn,
+    toggleSound,
+    toggleMusic,
   } = useGame();
 
   useEffect(() => {
     const unlock = () => unlockAudio();
+    // iOS exige touchstart. Adicionamos em várias camadas pra garantir
+    // que o primeiro gesto (qualquer ele) destrave o áudio.
+    window.addEventListener('touchstart', unlock, { once: true, passive: true });
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
+    window.addEventListener('click', unlock, { once: true });
     return () => {
+      window.removeEventListener('touchstart', unlock);
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
+      window.removeEventListener('click', unlock);
     };
   }, []);
 
@@ -103,6 +113,24 @@ export function Home() {
           >
             🏆 Ranking
           </Link>
+          <button
+            onClick={toggleMusic}
+            title="Música"
+            aria-label={musicOn ? 'Desligar música' : 'Ligar música'}
+            className={`h-10 w-10 rounded-full shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition ${
+              musicOn ? 'bg-mint' : 'bg-white text-gray-400'
+            }`}
+          >
+            🎵
+          </button>
+          <button
+            onClick={toggleSound}
+            title="Efeitos sonoros"
+            aria-label={soundOn ? 'Desligar som' : 'Ligar som'}
+            className="h-10 w-10 rounded-full bg-white shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition"
+          >
+            {soundOn ? '🔊' : '🔇'}
+          </button>
         </div>
 
         {!diagnosticDone && (

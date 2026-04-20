@@ -18,9 +18,32 @@ function getCtx(): AudioContext | null {
   return ctx;
 }
 
+let unlocked = false;
+
+/**
+ * Desbloqueia o AudioContext no iOS/Safari.
+ * Deve ser chamado dentro do callback de um gesto do usuário
+ * (touchstart/pointerdown/keydown). Além de resumir o contexto,
+ * toca um buffer silencioso — o iOS só "acredita" que o som está
+ * liberado depois que um nó de áudio real é iniciado.
+ */
 export function unlockAudio() {
   const c = getCtx();
-  if (c && c.state === 'suspended') c.resume();
+  if (!c) return;
+  if (c.state === 'suspended') {
+    void c.resume();
+  }
+  if (unlocked) return;
+  try {
+    const buffer = c.createBuffer(1, 1, 22050);
+    const source = c.createBufferSource();
+    source.buffer = buffer;
+    source.connect(c.destination);
+    source.start(0);
+    unlocked = true;
+  } catch {
+    /* ignore */
+  }
 }
 
 export function setMuted(v: boolean) {
