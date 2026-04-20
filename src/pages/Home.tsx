@@ -48,16 +48,32 @@ export function Home() {
   const recommendedLevel = recommendedLevelId ? LEVELS.find((l) => l.id === recommendedLevelId) : null;
 
   /**
-   * Próxima lição a jogar = primeira desbloqueada sem ≥1 estrela.
-   * É o "Continuar aqui".
+   * Próxima lição a jogar ("Continuar aqui"):
+   *  - Se já jogou algo: pega o último nível registrado e, se ele ainda não
+   *    tem estrela, volta pra ele; senão, avança pro próximo desbloqueado
+   *    sem estrela DEPOIS dele.
+   *  - Se nunca jogou mas fez o diagnóstico: aponta pro recomendado.
+   *  - Caso contrário: começo absoluto.
+   * Antes era "primeiro desbloqueado sem estrela", o que mandava a criança
+   * de volta pro w1-l1 depois do diagnóstico ter desbloqueado vários níveis.
    */
   const nextUpId = useMemo(() => {
-    for (const lv of LEVELS) {
-      if (!isUnlocked(lv.id)) continue;
-      if ((scores[lv.id]?.stars ?? 0) < 1) return lv.id;
+    let lastPlayedIdx = -1;
+    for (let i = 0; i < LEVELS.length; i++) {
+      if (scores[LEVELS[i].id]) lastPlayedIdx = i;
     }
-    return null;
-  }, [scores, isUnlocked]);
+    if (lastPlayedIdx >= 0) {
+      const last = LEVELS[lastPlayedIdx];
+      if ((scores[last.id]?.stars ?? 0) < 1) return last.id;
+      for (let i = lastPlayedIdx + 1; i < LEVELS.length; i++) {
+        if (!isUnlocked(LEVELS[i].id)) continue;
+        if ((scores[LEVELS[i].id]?.stars ?? 0) < 1) return LEVELS[i].id;
+      }
+      return null;
+    }
+    if (recommendedLevelId) return recommendedLevelId;
+    return LEVELS[0]?.id ?? null;
+  }, [scores, isUnlocked, recommendedLevelId]);
 
   const nextUpLevel = nextUpId ? LEVELS.find((l) => l.id === nextUpId) : null;
 

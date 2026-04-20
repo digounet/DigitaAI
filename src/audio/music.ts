@@ -18,8 +18,8 @@ const globbed = import.meta.glob('../assets/music/*.{mp3,ogg,m4a,wav}', {
 const PLAYLIST: string[] = Object.values(globbed);
 
 const LEGACY_FALLBACK = `${import.meta.env.BASE_URL}music/background.mp3`;
+const TARGET_VOLUME = 0.22;
 
-/** Embaralha uma cópia (Fisher-Yates). */
 function shuffled<T>(arr: T[]): T[] {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -31,11 +31,8 @@ function shuffled<T>(arr: T[]): T[] {
 
 let audio: HTMLAudioElement | null = null;
 let enabled = false;
-/** Fila atual (embaralhada). Ao esvaziar, re-embaralhamos. */
 let queue: string[] = [];
-/** URLs que já deram erro — pulamos em tentativas futuras. */
 const failedUrls = new Set<string>();
-/** Sentinela: se detectamos queue vazia após filtrar falhas, paramos de tentar. */
 let playlistExhausted = false;
 
 function buildQueue(): string[] {
@@ -53,29 +50,6 @@ function nextUrl(): string | null {
   return queue.shift() ?? null;
 }
 
-function fadeIn(a: HTMLAudioElement, target = 0.22, durationMs = 400) {
-  a.volume = 0;
-  const start = performance.now();
-  const step = (t: number) => {
-    const k = Math.min(1, (t - start) / durationMs);
-    a.volume = target * k;
-    if (k < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
-
-function fadeOutAndPause(a: HTMLAudioElement, durationMs = 300) {
-  const startV = a.volume;
-  const start = performance.now();
-  const step = (t: number) => {
-    const k = Math.min(1, (t - start) / durationMs);
-    a.volume = startV * (1 - k);
-    if (k < 1) requestAnimationFrame(step);
-    else a.pause();
-  };
-  requestAnimationFrame(step);
-}
-
 function playWithGestureRetry(a: HTMLAudioElement) {
   a.play().catch((err) => {
     if (err && err.name === 'NotAllowedError') {
@@ -84,10 +58,12 @@ function playWithGestureRetry(a: HTMLAudioElement) {
         window.removeEventListener('touchstart', retry);
         window.removeEventListener('pointerdown', retry);
         window.removeEventListener('keydown', retry);
+        window.removeEventListener('click', retry);
       };
       window.addEventListener('touchstart', retry, { once: true, passive: true });
       window.addEventListener('pointerdown', retry, { once: true });
       window.addEventListener('keydown', retry, { once: true });
+      window.addEventListener('click', retry, { once: true });
     }
   });
 }
@@ -100,37 +76,37 @@ function playNext() {
 
   const next = new Audio(url);
   next.preload = 'auto';
-  // Loop só se a playlist tiver 1 arquivo — senão, ao acabar, avança.
-  const willLoop = (PLAYLIST.length > 0 ? PLAYLIST.length : 1) === 1;
-  next.loop = willLoop;
-
-  const onError = () => {
-    failedUrls.add(url);
-    console.info('[music] falha ao carregar', url);
-    // Tenta a próxima
-    if (enabled) playNext();
-  };
-  next.addEventListener('error', onError, { once: true });
+  next.volume = TARGET_VOLUME;
+  // Se só tem 1 arquivo disponível, loop infinito. Com múltiplos, avança no `ended`.
+  const poolSize = PLAYLIST.length > 0 ? PLAYLIST.length : 1;
+  next.loop = poolSize <= 1;
 
   next.addEventListener(
-    'canplaythrough',
+    'error',
     () => {
-      const old = audio;
-      audio = next;
-      if (enabled) {
-        playWithGestureRetry(next);
-        fadeIn(next);
-      }
-      if (old) fadeOutAndPause(old);
+      failedUrls.add(url);
+      console.info('[music] falha ao carregar', url);
+      if (audio === next) audio = null;
+      if (enabled) playNext();
     },
     { once: true }
   );
 
-  if (!willLoop) {
+  if (!next.loop) {
     next.addEventListener('ended', () => {
       if (audio === next && enabled) playNext();
     });
   }
+
+  // Pausa faixa anterior e faz swap imediato — o Audio vai aguardar o buffer
+  // e começar a tocar sozinho. Não esperamos `canplaythrough` porque em alguns
+  // browsers (Safari/iOS) ele não dispara até haver gesto.
+  const old = audio;
+  audio = next;
+  if (old) {
+    try { old.pause(); } catch { /* ignora */ }
+  }
+  if (enabled) playWithGestureRetry(next);
 }
 
 export function setMusicEnabled(on: boolean) {
@@ -143,7 +119,6 @@ export function setMusicEnabled(on: boolean) {
   }
 }
 
-/** Quando o som geral está mudo, pausa a música (mantém `enabled`). */
 export function setMusicSuppressed(suppress: boolean) {
   if (!audio) return;
   if (suppress) audio.pause();
@@ -154,7 +129,6 @@ export function setMusicVolume(v: number) {
   if (audio) audio.volume = Math.max(0, Math.min(1, v));
 }
 
-/** Avança pra próxima faixa agora (útil pra botão "skip" no futuro). */
 export function skipTrack() {
   if (!enabled) return;
   playNext();

@@ -6,8 +6,19 @@ export type Stats = {
   errors: number;
   wpm: number;
   accuracy: number;
+  /** Precisão suavizada pra exibição — aplica "pseudo-hits" pra que o primeiro
+   *  erro não derrube de 100% pra 0% instantaneamente. Converge pra `accuracy`
+   *  conforme as tentativas aumentam. Usar só em UI; estrelas usam `accuracy`. */
+  displayAccuracy: number;
   startedAt: number | null;
 };
+
+/** Smoothing estilo Laplace: adiciona N hits fantasmas pra amortecer o início. */
+const PSEUDO_HITS = 5;
+function smoothAccuracy(correct: number, total: number): number {
+  if (total === 0) return 100;
+  return Math.min(100, ((correct + PSEUDO_HITS) / (total + PSEUDO_HITS)) * 100);
+}
 
 /**
  * Hook que mantém estatísticas de digitação: acertos, erros, WPM (palavras/min)
@@ -20,6 +31,7 @@ export function useTypingStats() {
     errors: 0,
     wpm: 0,
     accuracy: 100,
+    displayAccuracy: 100,
     startedAt: null,
   });
   const startedAtRef = useRef<number | null>(null);
@@ -32,8 +44,16 @@ export function useTypingStats() {
       const total = s.total + 1;
       const minutes = Math.max((Date.now() - startedAt) / 60000, 1 / 60);
       const wpm = correct / 5 / minutes;
-      const accuracy = total === 0 ? 100 : (correct / total) * 100;
-      return { ...s, correct, total, wpm, accuracy, startedAt };
+      const accuracy = (correct / total) * 100;
+      return {
+        ...s,
+        correct,
+        total,
+        wpm,
+        accuracy,
+        displayAccuracy: smoothAccuracy(correct, total),
+        startedAt,
+      };
     });
   }, []);
 
@@ -41,14 +61,28 @@ export function useTypingStats() {
     setStats((s) => {
       const total = s.total + 1;
       const errors = s.errors + 1;
-      const accuracy = total === 0 ? 100 : (s.correct / total) * 100;
-      return { ...s, total, errors, accuracy };
+      const accuracy = (s.correct / total) * 100;
+      return {
+        ...s,
+        total,
+        errors,
+        accuracy,
+        displayAccuracy: smoothAccuracy(s.correct, total),
+      };
     });
   }, []);
 
   const reset = useCallback(() => {
     startedAtRef.current = null;
-    setStats({ correct: 0, total: 0, errors: 0, wpm: 0, accuracy: 100, startedAt: null });
+    setStats({
+      correct: 0,
+      total: 0,
+      errors: 0,
+      wpm: 0,
+      accuracy: 100,
+      displayAccuracy: 100,
+      startedAt: null,
+    });
   }, []);
 
   return { stats, registerHit, registerMiss, reset };

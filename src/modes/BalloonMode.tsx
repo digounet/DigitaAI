@@ -238,7 +238,7 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       <div className="absolute top-36 md:top-28 right-3 bg-white/70 rounded-2xl px-3 py-2 backdrop-blur shadow-pop text-sm space-y-1">
         <div>🎈 <b>{cleared}</b>/{level.target}</div>
         <div>💨 <b>{missed}</b></div>
-        <div>🎯 <b>{Math.round(stats.accuracy)}%</b></div>
+        <div>🎯 <b>{Math.round(stats.displayAccuracy)}%</b></div>
       </div>
 
       <div className="absolute inset-0 pointer-events-none">

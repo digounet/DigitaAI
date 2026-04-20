@@ -244,7 +244,7 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
         </div>
 
         <div className="mt-3 flex gap-2 flex-wrap justify-center">
-          <Stat label="🎯 Precisão" value={`${Math.round(stats.accuracy)}%`} />
+          <Stat label="🎯 Precisão" value={`${Math.round(stats.displayAccuracy)}%`} />
           <Stat label="⚡ PPM" value={Math.round(stats.wpm).toString()} />
           {level.goalWpm && <Stat label="🏁 Meta" value={`${level.goalWpm} PPM`} />}
         </div>

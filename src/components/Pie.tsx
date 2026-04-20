@@ -74,12 +74,25 @@ function PieSVG({ word, typed, color, done }: { word: string; typed: string; col
         {word.split('').map((ch, i) => {
           const matched = i < typed.length && typed[i].toLowerCase() === ch.toLowerCase();
           const cursor = i === typed.length;
+          const isSpace = ch === ' ';
+          // Espaço precisa ser visível pra criança não achar que a palavra é
+          // "4carros". Renderizamos "·" em cinza (e "␣" destacado quando é a
+          // próxima tecla) com uma folga horizontal que imita um espaço real.
+          const display = isSpace ? (cursor ? '␣' : '·') : ch;
+          const colorCls = matched
+            ? 'text-grass'
+            : isSpace
+            ? cursor
+              ? 'text-gray-900'
+              : 'text-gray-400'
+            : 'text-gray-700';
+          const spaceCls = isSpace ? 'px-1' : '';
           return (
             <span
               key={i}
-              className={`${matched ? 'text-grass' : 'text-gray-700'} ${cursor ? 'underline decoration-candy decoration-4 underline-offset-2' : ''}`}
+              className={`${colorCls} ${spaceCls} ${cursor ? 'underline decoration-candy decoration-4 underline-offset-2' : ''}`}
             >
-              {ch}
+              {display}
             </span>
           );
         })}
