@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useGame } from '../store/gameStore';
+import { useToolbarKeyboardNav } from '../hooks/useToolbarKeyboardNav';
 
 type Props = {
   title?: string;
@@ -19,13 +20,22 @@ type Props = {
 export function HUD({ title, subtitle, progress, worldLabel, lessonLabel, worldEmoji, right, onPause }: Props) {
   const { soundOn, musicOn, toggleSound, toggleMusic, totalStars } = useGame();
 
+  // Ordem de navegação: [Home, Pause?, Music, Sound]. Pause é opcional.
+  const count = onPause ? 4 : 3;
+  const { btnRef, focused } = useToolbarKeyboardNav(count);
+  const ring = (i: number) => (focused === i ? 'ring-4 ring-grape/60 outline-none' : '');
+
+  // Índices dinâmicos conforme onPause estiver presente.
+  const idx = { home: 0, pause: onPause ? 1 : -1, music: onPause ? 2 : 1, sound: onPause ? 3 : 2 };
+
   return (
     <div className="fixed top-0 left-0 right-0 z-30">
       <div className="flex items-center gap-3 px-3 md:px-6 py-3 bg-white/75 backdrop-blur shadow-bubbly rounded-b-3xl">
         <Link
+          ref={btnRef(idx.home) as never}
           to="/"
           aria-label="Voltar para o início"
-          className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-candy text-white flex items-center justify-center text-xl shadow-pop hover:scale-105 active:scale-95 transition"
+          className={`h-10 w-10 md:h-12 md:w-12 rounded-full bg-candy text-white flex items-center justify-center text-xl shadow-pop hover:scale-105 active:scale-95 transition ${ring(idx.home)}`}
         >
           🏠
         </Link>
@@ -63,29 +73,32 @@ export function HUD({ title, subtitle, progress, worldLabel, lessonLabel, worldE
           </div>
           {onPause && (
             <button
+              ref={btnRef(idx.pause)}
               onClick={onPause}
               aria-label="Pausar jogo"
               title="Pausar (Esc)"
-              className="h-10 w-10 md:h-11 md:w-11 rounded-full bg-grape text-white shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition"
+              className={`h-10 w-10 md:h-11 md:w-11 rounded-full bg-grape text-white shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition ${ring(idx.pause)}`}
             >
               ⏸️
             </button>
           )}
           <button
+            ref={btnRef(idx.music)}
             onClick={toggleMusic}
             aria-label={musicOn ? 'Desligar música' : 'Ligar música'}
             title="Música"
             className={`h-10 w-10 md:h-11 md:w-11 rounded-full shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition ${
               musicOn ? 'bg-mint' : 'bg-white text-gray-400'
-            }`}
+            } ${ring(idx.music)}`}
           >
             🎵
           </button>
           <button
+            ref={btnRef(idx.sound)}
             onClick={toggleSound}
             aria-label={soundOn ? 'Desligar som' : 'Ligar som'}
             title="Efeitos sonoros"
-            className="h-10 w-10 md:h-11 md:w-11 rounded-full bg-white shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition"
+            className={`h-10 w-10 md:h-11 md:w-11 rounded-full bg-white shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition ${ring(idx.sound)}`}
           >
             {soundOn ? '🔊' : '🔇'}
           </button>
