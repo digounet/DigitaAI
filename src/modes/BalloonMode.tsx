@@ -116,7 +116,12 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       const aliveCount = balloonsRef.current.filter((x) => !x.popped).length;
       if (aliveCount >= maxAtOnce) return;
       const nid = ++nextIdRef.current;
-      const letter = level.pool[Math.floor(Math.random() * level.pool.length)];
+      // Lições "Descubra X" usam `sequence` pra alternar tecla-guia ↔ letra
+      // nova em ordem (F, T, F, T...) em vez de sortear aleatoriamente. O
+      // contador é `nid`, que incrementa a cada spawn.
+      const letter = level.sequence
+        ? level.pool[(nid - 1) % level.pool.length]
+        : level.pool[Math.floor(Math.random() * level.pool.length)];
       const x = 5 + Math.random() * 85;
       setBalloons((b) => [
         ...b,
@@ -134,7 +139,7 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
     doSpawn();
     const id = setInterval(doSpawn, spawnEvery);
     return () => clearInterval(id);
-  }, [finished, paused, speed, level.target, level.pool, level.maxAtOnce]);
+  }, [finished, paused, speed, level.target, level.pool, level.maxAtOnce, level.sequence]);
 
   // Ao pausar ou finalizar, limpa balões pendentes pra não continuarem subindo
   // atrás do overlay/modal (e evita que eles contem como erro na métrica final).
