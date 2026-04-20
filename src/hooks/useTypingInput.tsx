@@ -44,6 +44,26 @@ export function useTypingInput(opts: Options) {
     inputRef.current?.focus();
   }, [enabled]);
 
+  // Esc como listener global (capture) — independente de onde está o foco.
+  // Antes dependíamos de o `<input>` estar focado pra o onKeyDown pegar;
+  // se o foco tivesse mudado pra um botão do HUD (via setas), Esc escapava
+  // e caía no comportamento default do navegador (podia disparar o click
+  // do Link focado, navegando pra /). Agora:
+  //  - Capture pra ganhar de qualquer outro handler
+  //  - Só age se `enabled` (game rodando, não pausado, não terminado)
+  //  - preventDefault + stopPropagation pra garantir que nada mais receba
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (!enabledRef.current) return;
+      e.preventDefault();
+      e.stopPropagation();
+      optsRef.current.onEscape?.();
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, []);
+
   // Refocus se o input perder foco (útil depois de clicar em botões modais).
   // Mas só quando `enabled`: modais querem o foco nos seus botões e o tick
   // roubaria de volta.
@@ -103,10 +123,8 @@ export function useTypingInput(opts: Options) {
         }
         // Key nova apertada → reset da flag.
         repeatingRef.current = false;
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          optsRef.current.onEscape?.();
-        } else if (e.key === 'Backspace') {
+        // Esc é tratado no listener global (useEffect acima). Aqui só Backspace.
+        if (e.key === 'Backspace') {
           if ((e.nativeEvent as KeyboardEvent).isComposing) return;
           optsRef.current.onBackspace?.();
         }

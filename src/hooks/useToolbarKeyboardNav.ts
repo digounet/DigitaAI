@@ -14,18 +14,35 @@ import { useEffect, useRef, useState } from 'react';
  *   4. Enter/Space aciona o botão focado via `.click()` (sem precisar de
  *      foco DOM real).
  */
-export function useToolbarKeyboardNav(count: number) {
+type Opts = {
+  /** "Pulo grande" pra ↑/↓ (ex: tamanho de linha num grid). Default = 1. */
+  verticalStep?: number;
+  /** Rola o elemento focado pra viewport quando muda. Default = false. */
+  scrollIntoView?: boolean;
+};
+
+export function useToolbarKeyboardNav(count: number, opts: Opts = {}) {
   const [focused, setFocused] = useState(-1);
   const refs = useRef<(HTMLElement | null)[]>([]);
   const focusedRef = useRef(focused);
   focusedRef.current = focused;
   const countRef = useRef(count);
   countRef.current = count;
+  const stepRef = useRef(opts.verticalStep ?? 1);
+  stepRef.current = opts.verticalStep ?? 1;
+  const scrollRef = useRef(opts.scrollIntoView ?? false);
+  scrollRef.current = opts.scrollIntoView ?? false;
+
+  useEffect(() => {
+    if (focused < 0 || !scrollRef.current) return;
+    refs.current[focused]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [focused]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const n = countRef.current;
       if (n === 0) return;
+      const step = stepRef.current;
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
@@ -35,6 +52,20 @@ export function useToolbarKeyboardNav(count: number) {
           e.preventDefault();
           setFocused((i) => (i < 0 ? 0 : (i + 1) % n));
           break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocused((i) => {
+            if (i < 0) return 0;
+            return Math.max(0, i - step);
+          });
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocused((i) => {
+            if (i < 0) return 0;
+            return Math.min(n - 1, i + step);
+          });
+          break;
         case 'Enter':
         case ' ':
           if (focusedRef.current >= 0) {
@@ -42,8 +73,7 @@ export function useToolbarKeyboardNav(count: number) {
             refs.current[focusedRef.current]?.click();
           }
           break;
-        // Esc é tratado exclusivamente pelo mode (toggle de pausa) — o hook
-        // da toolbar não intercepta pra não competir com essa ação.
+        // Esc é tratado pelo mode/pausa — o hook não intercepta.
       }
     };
     window.addEventListener('keydown', handler);
@@ -54,5 +84,5 @@ export function useToolbarKeyboardNav(count: number) {
     refs.current[i] = el;
   };
 
-  return { btnRef, focused };
+  return { btnRef, focused, setFocused };
 }

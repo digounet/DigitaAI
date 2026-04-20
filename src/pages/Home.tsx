@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { WORLDS, getLevelsByWorld, LEVELS } from '../data/levels';
 import { useGame } from '../store/gameStore';
 import { unlockAudio } from '../audio/sfx';
+import { useToolbarKeyboardNav } from '../hooks/useToolbarKeyboardNav';
 
 export function Home() {
   const {
@@ -70,6 +71,28 @@ export function Home() {
     const completed = LEVELS.filter((l) => (scores[l.id]?.stars ?? 0) >= 1).length;
     return { completed, total: LEVELS.length };
   }, [scores]);
+
+  // ---- Navegação por teclado nos cards de lição ----
+  // Só considera níveis desbloqueados (lock não é interativo).
+  const unlockedIds = useMemo(() => LEVELS.filter((l) => isUnlocked(l.id)).map((l) => l.id), [isUnlocked]);
+  const cardIndexById = useMemo(() => {
+    const m = new Map<string, number>();
+    unlockedIds.forEach((id, i) => m.set(id, i));
+    return m;
+  }, [unlockedIds]);
+  // Pulo vertical = tamanho médio do mundo. Aproximado em 5 (média das colunas
+  // no desktop). No mobile a coluna muda mas ↑↓ continua movendo "bastante".
+  const { btnRef: cardRef, focused: focusedCard, setFocused: setFocusedCard } = useToolbarKeyboardNav(
+    unlockedIds.length,
+    { verticalStep: 5, scrollIntoView: true }
+  );
+
+  // Ao carregar a Home, já destaca o card "continuar" pra dar contexto.
+  useEffect(() => {
+    if (!nextUpId) return;
+    const idx = cardIndexById.get(nextUpId);
+    if (idx !== undefined) setFocusedCard(idx);
+  }, [nextUpId, cardIndexById, setFocusedCard]);
 
   return (
     <div className="relative flex-1 w-full overflow-y-auto overflow-x-hidden">
@@ -230,10 +253,23 @@ export function Home() {
                   const score = scores[lv.id];
                   const recommended = lv.id === recommendedLevelId;
                   const isNext = lv.id === nextUpId;
+                  const cardIdx = cardIndexById.get(lv.id);
+                  const isFocused = cardIdx !== undefined && cardIdx === focusedCard;
+                  // Prioridade do ring: foco > começar aqui > continuar.
+                  const ringCls = isFocused
+                    ? 'ring-4 ring-grape'
+                    : recommended
+                    ? 'ring-4 ring-sun'
+                    : isNext
+                    ? 'ring-4 ring-grass'
+                    : '';
                   return (
                     <Link
                       key={lv.id}
-                      ref={isNext ? nextRef : undefined}
+                      ref={(el) => {
+                        if (isNext) nextRef.current = el;
+                        if (unlocked && cardIdx !== undefined) cardRef(cardIdx)(el);
+                      }}
                       to={unlocked ? `/play/${lv.id}` : '#'}
                       onClick={(e) => !unlocked && e.preventDefault()}
                       aria-disabled={!unlocked}
@@ -241,7 +277,7 @@ export function Home() {
                         unlocked
                           ? 'bg-white hover:-translate-y-1 hover:shadow-xl cursor-pointer'
                           : 'bg-white/50 cursor-not-allowed'
-                      } ${recommended ? 'ring-4 ring-sun' : ''} ${isNext && !recommended ? 'ring-4 ring-grass' : ''}`}
+                      } ${ringCls}`}
                     >
                       {recommended && (
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-sun text-gray-900 text-[11px] font-bold px-2 py-0.5 rounded-full shadow-pop whitespace-nowrap">
