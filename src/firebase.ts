@@ -1,10 +1,8 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import {
   getAuth,
-  signInAnonymously,
   onAuthStateChanged,
   signInWithPopup,
-  linkWithPopup,
   signOut as fbSignOut,
   GoogleAuthProvider,
   type Auth,
@@ -26,51 +24,32 @@ export const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
 
-/** Garante que exista um User autenticado. Faz login anônimo se necessário. */
-export function ensureAuth(): Promise<User> {
-  return new Promise((resolve, reject) => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        unsub();
-        resolve(user);
-      }
-    });
-    signInAnonymously(auth).catch((err) => {
-      unsub();
-      reject(err);
-    });
-  });
-}
+// Resolve depois do primeiro onAuthStateChanged pra evitar o race de
+// `auth.currentUser` ser null durante os primeiros ms da inicialização.
+let authInitResolve: ((u: User | null) => void) | null = null;
+const authInit = new Promise<User | null>((r) => (authInitResolve = r));
+onAuthStateChanged(auth, (u) => {
+  authInitResolve?.(u);
+  authInitResolve = null;
+});
 
 /**
- * Login com Google. Se o usuário atual é anônimo, tenta *linkar* a conta
- * (preserva UID e progresso). Se o Google já estava linkado a outro UID,
- * cai de volta pro `signInWithPopup` (troca de conta).
+ * Retorna o usuário logado (Google) se houver. Nunca cria sessão anônima —
+ * se o usuário nunca clicou em "Entrar com Google", resolve pra `null`.
  */
+export function getCurrentUser(): Promise<User | null> {
+  if (auth.currentUser) return Promise.resolve(auth.currentUser);
+  return authInit;
+}
+
+/** Login com Google via popup. */
 export async function signInWithGoogle(): Promise<User> {
   const provider = new GoogleAuthProvider();
-  const current = auth.currentUser;
-  if (current && current.isAnonymous) {
-    try {
-      const cred = await linkWithPopup(current, provider);
-      return cred.user;
-    } catch (err) {
-      const code = (err as { code?: string }).code;
-      if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') {
-        // Já existe conta Google com esse e-mail — só fazer signIn normal.
-        await fbSignOut(auth);
-        const cred = await signInWithPopup(auth, provider);
-        return cred.user;
-      }
-      throw err;
-    }
-  }
   const cred = await signInWithPopup(auth, provider);
   return cred.user;
 }
 
-/** Faz logout e imediatamente cria uma nova sessão anônima pra o jogo continuar. */
+/** Logout. Nada de recriação anônima — o jogador volta ao estado "visitante". */
 export async function signOut(): Promise<void> {
   await fbSignOut(auth);
-  await signInAnonymously(auth);
 }

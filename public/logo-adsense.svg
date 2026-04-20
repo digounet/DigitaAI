@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="200" viewBox="0 0 1000 200">
+  <defs>
+    <radialGradient id="b" cx="35%" cy="28%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#ffb8d6"/>
+      <stop offset="78%" stop-color="#ff6fa5"/>
+      <stop offset="100%" stop-color="#e03a7a"/>
+    </radialGradient>
+  </defs>
+
+  <!-- balão à esquerda -->
+  <g transform="translate(40 26)">
+    <path d="M70 0 C30 0 4 40 4 88 C4 136 36 164 60 170 L60 182 L82 182 L82 170 C106 164 138 136 138 88 C138 40 112 0 72 0Z" fill="url(#b)"/>
+    <ellipse cx="48" cy="48" rx="15" ry="24" fill="rgba(255,255,255,0.4)"/>
+    <path d="M60 182 L82 182 L78 196 L64 196 Z" fill="rgba(0,0,0,0.2)"/>
+    <text x="71" y="120" text-anchor="middle" font-family="Fredoka, 'Arial Rounded MT Bold', Arial, sans-serif" font-weight="700" font-size="104" fill="#fff">A</text>
+  </g>
+
+  <!-- wordmark -->
+  <text x="220" y="125" font-family="Fredoka, 'Arial Rounded MT Bold', Arial, sans-serif" font-weight="700" font-size="120" letter-spacing="-3">
+    <tspan fill="#ff6fa5">Digit</tspan><tspan fill="#a78bfa">AI</tspan>
+  </text>
+
+  <!-- tagline -->
+  <text x="224" y="166" font-family="Fredoka, 'Arial Rounded MT Bold', Arial, sans-serif" font-weight="500" font-size="22" fill="#6b7280">
+    aprender a digitar brincando
+  </text>
+</svg>

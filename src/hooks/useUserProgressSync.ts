@@ -1,12 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../store/gameStore';
 
 /**
- * Sincroniza o progresso local com Firestore (`users/{uid}`):
- *  - Ao login (mudança de UID), baixa o doc e faz merge (pega o melhor score por nível).
- *  - Ao alterar progresso local, faz upsert com debounce.
+ * Sincroniza progresso com `users/{uid}` no Firestore.
  *
- * Firebase SDK é importado dinamicamente pra não entrar no bundle inicial.
+ * IMPORTANTE: só escreve para usuários logados com conta real (Google).
+ * Sessões anônimas ficam 100% locais (Zustand persist → localStorage).
+ * Motivo: anônimos criam UIDs únicos por dispositivo/navegador/aba privada
+ * — se salvássemos, a coleção users cresceria indefinidamente com docs
+ * que nunca mais serão acessados.
  */
 export function useUserProgressSync() {
   const playerName = useGame((s) => s.playerName);
@@ -14,10 +16,12 @@ export function useUserProgressSync() {
   const diagnosticDone = useGame((s) => s.diagnosticDone);
   const recommendedLevelId = useGame((s) => s.recommendedLevelId);
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const saveTimerRef = useRef<number | null>(null);
   const mergedForUidRef = useRef<string | null>(null);
 
-  // Observa auth: quando o UID muda (login/logout), baixa doc e mescla.
+  // Observa auth: só depois que o usuário é NÃO-anônimo é que fazemos merge
+  // e começamos a sincronizar.
   useEffect(() => {
     let unsub: (() => void) | null = null;
     let cancelled = false;
@@ -27,7 +31,12 @@ export function useUserProgressSync() {
       const { loadUserProgress } = await import('../services/userProgress');
       if (cancelled) return;
       unsub = onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
+        const loggedIn = !!user && !user.isAnonymous;
+        setIsAuthenticated(loggedIn);
+        if (!loggedIn || !user) {
+          mergedForUidRef.current = null;
+          return;
+        }
         if (mergedForUidRef.current === user.uid) return;
         mergedForUidRef.current = user.uid;
         const remote = await loadUserProgress();
@@ -60,8 +69,9 @@ export function useUserProgressSync() {
     };
   }, []);
 
-  // Salva mudanças locais no Firestore (debounce 1500ms).
+  // Só salva se estiver logado de verdade.
   useEffect(() => {
+    if (!isAuthenticated) return;
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     saveTimerRef.current = window.setTimeout(async () => {
       const { saveUserProgress } = await import('../services/userProgress');
@@ -70,5 +80,5 @@ export function useUserProgressSync() {
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
-  }, [playerName, scores, diagnosticDone, recommendedLevelId]);
+  }, [playerName, scores, diagnosticDone, recommendedLevelId, isAuthenticated]);
 }

@@ -24,7 +24,13 @@ type PieItem = {
   color: string;
   duration: number;
   popped?: boolean;
+  /** Instante em que a torta entra na área visível (anti-dica-antecipada). */
+  visibleAfter: number;
 };
+
+/** Fração do `speed` até a torta estar acima do teclado virtual. Tortas são
+ *  mais altas que balões e começam em -180px, então um pouco mais de graça. */
+const VISIBLE_GRACE_FRACTION = 0.45;
 
 type Props = {
   level: Level;
@@ -66,16 +72,25 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
 
   const speed = level.speed ?? 10;
 
-  // Calcula próxima letra visível (sem sobrecarregar dependências).
+  // Ticker: só dá dica quando a torta já entrou na área visível.
   useEffect(() => {
-    const active = pies.find((p) => p.id === activeId && !p.popped);
-    if (active) {
-      setNextLetter(active.word[active.typed.length]?.toLowerCase());
-    } else {
-      const alive = pies.find((p) => !p.popped);
-      setNextLetter(alive?.word[0]?.toLowerCase());
-    }
-  }, [pies, activeId]);
+    const tick = () => {
+      const now = Date.now();
+      const aid = activeIdRef.current;
+      const active = aid !== null ? piesRef.current.find((p) => p.id === aid && !p.popped) : undefined;
+      if (active) {
+        const ch = active.word[active.typed.length]?.toLowerCase();
+        setNextLetter((prev) => (prev === ch ? prev : ch));
+        return;
+      }
+      const alive = piesRef.current.find((p) => !p.popped && now >= p.visibleAfter);
+      const ch = alive?.word[0]?.toLowerCase();
+      setNextLetter((prev) => (prev === ch ? prev : ch));
+    };
+    tick();
+    const id = window.setInterval(tick, 200);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (finished || paused) return;
@@ -89,7 +104,18 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
       const nid = ++nextIdRef.current;
       const word = level.pool[Math.floor(Math.random() * level.pool.length)];
       const x = 5 + Math.random() * 80;
-      setPies((b) => [...b, { id: nid, word, typed: '', x, color: pieColor(nid), duration: speed }]);
+      setPies((b) => [
+        ...b,
+        {
+          id: nid,
+          word,
+          typed: '',
+          x,
+          color: pieColor(nid),
+          duration: speed,
+          visibleAfter: Date.now() + speed * 1000 * VISIBLE_GRACE_FRACTION,
+        },
+      ]);
     };
     doSpawn();
     const id = setInterval(doSpawn, every);
@@ -115,8 +141,10 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
 
       let targetId = activeIdRef.current;
       if (targetId === null) {
+        // Só considera tortas que já passaram pela janela de graça.
+        const now = Date.now();
         const candidate = piesRef.current.find(
-          (p) => !p.popped && p.typed === '' && p.word[0].toLowerCase() === lk
+          (p) => !p.popped && p.typed === '' && now >= p.visibleAfter && p.word[0].toLowerCase() === lk
         );
         if (candidate) {
           targetId = candidate.id;

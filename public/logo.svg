@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="240" viewBox="0 0 800 240">
+  <defs>
+    <radialGradient id="bal-pink" cx="35%" cy="28%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="30%" stop-color="#ffb8d6"/>
+      <stop offset="75%" stop-color="#ff6fa5"/>
+      <stop offset="100%" stop-color="#e03a7a"/>
+    </radialGradient>
+    <filter id="logo-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.2"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- balão à esquerda -->
+  <g transform="translate(24 30)" filter="url(#logo-shadow)">
+    <path d="M80 0 C36 0 4 44 4 96 C4 152 44 190 72 198 L72 210 L98 210 L98 198 C126 190 166 152 166 96 C166 44 134 0 90 0Z"
+          fill="url(#bal-pink)"/>
+    <ellipse cx="55" cy="55" rx="18" ry="28" fill="rgba(255,255,255,0.4)"/>
+    <path d="M72 210 L98 210 L93 225 L77 225 Z" fill="rgba(0,0,0,0.2)"/>
+    <text x="85" y="140" text-anchor="middle" font-family="Fredoka, 'Arial Rounded MT Bold', Arial, sans-serif"
+          font-weight="700" font-size="120" fill="#fff">A</text>
+  </g>
+
+  <!-- wordmark -->
+  <text x="230" y="160"
+        font-family="Fredoka, 'Arial Rounded MT Bold', Arial, sans-serif"
+        font-weight="700"
+        font-size="150"
+        letter-spacing="-4">
+    <tspan fill="#ff6fa5">Digit</tspan><tspan fill="#a78bfa">AI</tspan>
+  </text>
+
+  <!-- slogan -->
+  <text x="236" y="205"
+        font-family="Fredoka, 'Arial Rounded MT Bold', Arial, sans-serif"
+        font-weight="500"
+        font-size="28"
+        fill="#6b7280">
+    aprender a digitar brincando
+  </text>
+</svg>

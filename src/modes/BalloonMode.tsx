@@ -24,7 +24,22 @@ type BalloonItem = {
   color: string;
   duration: number;
   popped?: boolean;
+  /** Momento em que o balão já está visível na tela (após o delay de entrada). */
+  visibleAfter: number;
 };
+
+/**
+ * Fração do `speed` (tempo total de travessia) que o balão leva pra subir
+ * de fora da tela, atravessar a grama e ficar acima do teclado virtual.
+ * Enquanto o balão está nessa zona inferior (atrás do teclado), ele NÃO
+ * conta pra destaque do teclado nem pra correspondência — senão o teclado
+ * daria a dica da letra antes da criança conseguir ver o balão.
+ *
+ * 40% = balão precisa estar no "terço de cima" da grama/teclado pra ser
+ * considerado visível. Escala com o speed do nível (7s → 2.8s de graça,
+ * 10s → 4s de graça).
+ */
+const VISIBLE_GRACE_FRACTION = 0.4;
 
 type Props = {
   level: Level;
@@ -63,11 +78,18 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
 
   const speed = level.speed ?? 6;
 
-  // Atualiza a "próxima letra-alvo" apenas quando a lista muda (não afeta listener).
+  // Atualiza "próxima letra-alvo" com ticker — precisa ser periódico porque
+  // a visibilidade depende do tempo (visibleAfter), não só do state.
   useEffect(() => {
-    const alive = balloons.find((b) => !b.popped);
-    setNextTargetLetter(alive?.letter);
-  }, [balloons]);
+    const tick = () => {
+      const now = Date.now();
+      const visible = balloonsRef.current.find((b) => !b.popped && now >= b.visibleAfter);
+      setNextTargetLetter((prev) => (prev === visible?.letter ? prev : visible?.letter));
+    };
+    tick();
+    const id = window.setInterval(tick, 200);
+    return () => window.clearInterval(id);
+  }, []);
 
   // spawn periódico — depende só do nível, não de balloons state (usa ref).
   useEffect(() => {
@@ -84,7 +106,17 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       const nid = ++nextIdRef.current;
       const letter = level.pool[Math.floor(Math.random() * level.pool.length)];
       const x = 5 + Math.random() * 85;
-      setBalloons((b) => [...b, { id: nid, letter, x, color: balloonColor(nid), duration: speed }]);
+      setBalloons((b) => [
+        ...b,
+        {
+          id: nid,
+          letter,
+          x,
+          color: balloonColor(nid),
+          duration: speed,
+          visibleAfter: Date.now() + speed * 1000 * VISIBLE_GRACE_FRACTION,
+        },
+      ]);
     };
 
     doSpawn();
@@ -107,7 +139,10 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       window.setTimeout(() => setLastKey((k) => (k === baseKey(ch) ? undefined : k)), 120);
       playKey();
 
-      const target = balloonsRef.current.find((b) => !b.popped && b.letter.toLowerCase() === key);
+      const now = Date.now();
+      const target = balloonsRef.current.find(
+        (b) => !b.popped && now >= b.visibleAfter && b.letter.toLowerCase() === key
+      );
       if (target) {
         playPop();
         registerHit();

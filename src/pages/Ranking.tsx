@@ -3,14 +3,16 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mascot } from '../components/Mascot';
 import { fetchTop, type LeaderboardEntry } from '../services/leaderboard';
-import { ensureAuth } from '../firebase';
+import { getCurrentUser } from '../firebase';
 import { useGame } from '../store/gameStore';
 import { AdSlot } from '../components/AdSlot';
+import { AuthBadge } from '../components/AuthBadge';
 
 export function Ranking() {
   const { playerName } = useGame();
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
   const [myUid, setMyUid] = useState<string | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,9 +20,10 @@ export function Ranking() {
     setLoading(true);
     setError(null);
     try {
-      const [top, user] = await Promise.all([fetchTop(20), ensureAuth().catch(() => null)]);
+      const [top, user] = await Promise.all([fetchTop(20), getCurrentUser()]);
       setEntries(top);
       setMyUid(user?.uid ?? null);
+      setIsAnonymous(!user || user.isAnonymous);
     } catch (err) {
       console.error(err);
       setError('Não consegui carregar o ranking. Tente de novo em instantes.');
@@ -73,7 +76,18 @@ export function Ranking() {
             <div className="bg-coral/10 text-coral rounded-2xl p-3 mb-3 text-sm">{error}</div>
           )}
 
-          {!playerName && (
+          {isAnonymous && (
+            <div className="bg-sun/20 rounded-2xl p-4 mb-3 text-sm text-gray-700 flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex-1">
+                <b>Você não está no ranking 😊</b>
+                <div className="text-xs text-gray-600 mt-0.5">
+                  Pra aparecer aqui (e salvar progresso em qualquer aparelho), entre com sua conta Google:
+                </div>
+              </div>
+              <AuthBadge />
+            </div>
+          )}
+          {!isAnonymous && !playerName && (
             <div className="bg-sun/20 rounded-2xl p-3 mb-3 text-sm text-gray-700">
               Escreva seu nome na tela inicial pra aparecer aqui! 😉
             </div>

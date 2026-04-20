@@ -1,13 +1,12 @@
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db, ensureAuth } from '../firebase';
+import { db } from '../firebase';
 
 /**
- * Registra interesse por premium (captura de leads antes de ter produto pago).
- * Grava em `interests/{auto}` com email + timestamp. Uma pessoa pode registrar
- * várias vezes — simples e barato; dedup depois se virar problema.
+ * Registra interesse no Pro. Não exige login — qualquer visitante pode
+ * deixar o email. A regra do Firestore valida tamanho do email e impede
+ * leitura/alteração (só o dono do projeto lê via console).
  */
 export async function registerInterest(email: string, note?: string): Promise<void> {
-  await ensureAuth();
   const clean = email.trim().toLowerCase();
   if (!clean || !clean.includes('@')) throw new Error('Email inválido');
   await addDoc(collection(db, 'interests'), {

@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
-import { db, ensureAuth } from '../firebase';
+import { db, getCurrentUser } from '../firebase';
 
 export type LeaderboardEntry = {
   uid: string;
@@ -19,9 +19,8 @@ export type LeaderboardEntry = {
 };
 
 /**
- * Cria/atualiza a entrada do jogador atual no ranking.
- * Silencioso em caso de erro (offline, auth falhou etc) — não queremos
- * atrapalhar a brincadeira.
+ * Cria/atualiza a entrada do jogador no ranking. Só publica se houver
+ * usuário logado com Google. Chamadas de sessões não logadas saem silenciosas.
  */
 export async function upsertMyScore(params: {
   name: string;
@@ -29,7 +28,8 @@ export async function upsertMyScore(params: {
   bestWpm: number;
 }): Promise<void> {
   try {
-    const user = await ensureAuth();
+    const user = await getCurrentUser();
+    if (!user || user.isAnonymous) return;
     const name = (params.name || 'Jogador').trim().slice(0, 20) || 'Jogador';
     const payload = {
       name,
@@ -44,9 +44,8 @@ export async function upsertMyScore(params: {
 }
 
 /**
- * Busca top N ordenado por estrelas (desc) e desempata por bestWpm no cliente.
- * Buscamos um pouco mais do que `n` (*3) pra ter margem pra ordenar o desempate
- * sem precisar de índice composto no Firestore.
+ * Busca top N ordenado por estrelas e desempata por bestWpm no cliente.
+ * Não precisa de auth — leitura é pública.
  */
 export async function fetchTop(n = 20): Promise<LeaderboardEntry[]> {
   const q = query(
@@ -66,7 +65,6 @@ export async function fetchTop(n = 20): Promise<LeaderboardEntry[]> {
       updatedAt,
     } as LeaderboardEntry;
   });
-  // Desempate: dentro do mesmo totalStars, quem tem bestWpm maior vem primeiro.
   rows.sort((a, b) => b.totalStars - a.totalStars || b.bestWpm - a.bestWpm);
   return rows.slice(0, n);
 }
