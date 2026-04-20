@@ -1,23 +1,23 @@
 // Música de fundo em modo playlist — toca arquivos aleatoriamente.
 //
 // Como adicionar músicas:
-//   1. Coloque arquivos .mp3/.ogg/.m4a em `src/assets/music/`
-//   2. Rebuild (ou o Vite dev reload já pega automaticamente).
-//   Os arquivos são descobertos em tempo de build pelo import.meta.glob.
+//   Coloque arquivos MP3 em `public/music/` com nomes no padrão:
+//     music1.mp3, music2.mp3, music3.mp3, ...
+//   O app descobre automaticamente quais existem (HEAD request). Os que não
+//   existirem são ignorados. Suporta também `background.mp3` e `track-N.mp3`.
 //
-// Fallback: se a pasta estiver vazia, tenta `public/music/background.mp3`
-// (comportamento antigo). Se nada for encontrado, o app roda sem música.
+// Por que HEAD request antes: o Vite dev server (e SPAs hospedados) respondem
+// a arquivos inexistentes com o index.html (status 200, text/html). Se
+// alimentássemos isso direto no <audio>, o browser tentaria decodificar HTML
+// como MP3 e travaria. Então filtramos pelo Content-Type: audio/*.
 
-// Vite resolve esse glob no build: retorna objeto { path: url }.
-const globbed = import.meta.glob('../assets/music/*.{mp3,ogg,m4a,wav}', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-}) as Record<string, string>;
+const CANDIDATE_NAMES: string[] = [
+  'background.mp3',
+  ...Array.from({ length: 30 }, (_, i) => `music${i + 1}.mp3`),
+  ...Array.from({ length: 10 }, (_, i) => `track-${i + 1}.mp3`),
+];
 
-const PLAYLIST: string[] = Object.values(globbed);
-
-const LEGACY_FALLBACK = `${import.meta.env.BASE_URL}music/background.mp3`;
+const BASE = `${import.meta.env.BASE_URL}music/`;
 const TARGET_VOLUME = 0.22;
 
 function shuffled<T>(arr: T[]): T[] {
@@ -32,21 +32,42 @@ function shuffled<T>(arr: T[]): T[] {
 let audio: HTMLAudioElement | null = null;
 let enabled = false;
 let queue: string[] = [];
-const failedUrls = new Set<string>();
-let playlistExhausted = false;
 
-function buildQueue(): string[] {
-  const pool = PLAYLIST.length > 0 ? PLAYLIST : [LEGACY_FALLBACK];
-  const usable = pool.filter((u) => !failedUrls.has(u));
-  if (usable.length === 0) {
-    playlistExhausted = true;
-    return [];
+/** Descoberta lazy: faz HEAD em cada candidato e filtra pelos audio/*. */
+let playlistReady: Promise<string[]> | null = null;
+let playlist: string[] = [];
+
+function ensurePlaylist(): Promise<string[]> {
+  if (!playlistReady) {
+    playlistReady = Promise.all(
+      CANDIDATE_NAMES.map(async (name) => {
+        const url = BASE + name;
+        try {
+          const r = await fetch(url, { method: 'HEAD' });
+          if (!r.ok) return null;
+          const ct = r.headers.get('content-type') ?? '';
+          if (ct.startsWith('audio/')) return url;
+          return null;
+        } catch {
+          return null;
+        }
+      })
+    ).then((arr) => {
+      playlist = arr.filter((x): x is string => !!x);
+      if (playlist.length === 0) {
+        console.info('[music] nenhum arquivo encontrado em public/music/');
+      } else {
+        console.info('[music] playlist:', playlist.map((u) => u.replace(BASE, '')).join(', '));
+      }
+      return playlist;
+    });
   }
-  return shuffled(usable);
+  return playlistReady;
 }
 
 function nextUrl(): string | null {
-  if (queue.length === 0) queue = buildQueue();
+  if (playlist.length === 0) return null;
+  if (queue.length === 0) queue = shuffled(playlist);
   return queue.shift() ?? null;
 }
 
@@ -68,39 +89,28 @@ function playWithGestureRetry(a: HTMLAudioElement) {
   });
 }
 
-/** Carrega e toca a próxima faixa da fila. Se der erro, pula pra próxima. */
 function playNext() {
-  if (playlistExhausted) return;
   const url = nextUrl();
   if (!url) return;
 
   const next = new Audio(url);
   next.preload = 'auto';
   next.volume = TARGET_VOLUME;
-  // Se só tem 1 arquivo disponível, loop infinito. Com múltiplos, avança no `ended`.
-  const poolSize = PLAYLIST.length > 0 ? PLAYLIST.length : 1;
-  next.loop = poolSize <= 1;
+  next.loop = false;
 
-  next.addEventListener(
-    'error',
-    () => {
-      failedUrls.add(url);
-      console.info('[music] falha ao carregar', url);
-      if (audio === next) audio = null;
-      if (enabled) playNext();
-    },
-    { once: true }
-  );
+  let handled = false;
+  next.addEventListener('error', () => {
+    if (handled) return;
+    handled = true;
+    console.info('[music] falha ao tocar', url, next.error);
+    if (audio === next) audio = null;
+    if (enabled) playNext();
+  });
 
-  if (!next.loop) {
-    next.addEventListener('ended', () => {
-      if (audio === next && enabled) playNext();
-    });
-  }
+  next.addEventListener('ended', () => {
+    if (audio === next && enabled) playNext();
+  });
 
-  // Pausa faixa anterior e faz swap imediato — o Audio vai aguardar o buffer
-  // e começar a tocar sozinho. Não esperamos `canplaythrough` porque em alguns
-  // browsers (Safari/iOS) ele não dispara até haver gesto.
   const old = audio;
   audio = next;
   if (old) {
@@ -112,8 +122,13 @@ function playNext() {
 export function setMusicEnabled(on: boolean) {
   enabled = on;
   if (on) {
-    if (audio) playWithGestureRetry(audio);
-    else playNext();
+    if (audio) {
+      playWithGestureRetry(audio);
+      return;
+    }
+    ensurePlaylist().then(() => {
+      if (enabled && !audio) playNext();
+    });
   } else {
     audio?.pause();
   }
@@ -133,3 +148,7 @@ export function skipTrack() {
   if (!enabled) return;
   playNext();
 }
+
+// Inicia a descoberta em paralelo assim que o módulo carrega, pra quando
+// `setMusicEnabled(true)` for chamado a lista já esteja pronta.
+ensurePlaylist();
