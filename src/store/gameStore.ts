@@ -8,6 +8,16 @@ export type LevelScore = {
   accuracy: number; // 0..100
 };
 
+export type Difficulty = 'easy' | 'normal' | 'hard';
+
+/** Multiplica o `speed` (tempo de travessia) nos modos Balloon/Pie.
+ *  >1 = mais lento (mais tempo pra digitar). */
+export const DIFFICULTY_SPEED_MULTIPLIER: Record<Difficulty, number> = {
+  easy: 1.5,
+  normal: 1.0,
+  hard: 0.85,
+};
+
 type GameState = {
   playerName: string;
   scores: Record<string, LevelScore>;
@@ -15,12 +25,14 @@ type GameState = {
   musicOn: boolean;
   diagnosticDone: boolean;
   recommendedLevelId: string | null;
+  difficulty: Difficulty;
   setPlayerName: (name: string) => void;
   recordLevel: (levelId: string, score: LevelScore) => void;
   totalStars: () => number;
   isUnlocked: (levelId: string) => boolean;
   toggleSound: () => void;
   toggleMusic: () => void;
+  setDifficulty: (d: Difficulty) => void;
   /** Marca o teste inicial como feito e desbloqueia os níveis anteriores ao recomendado. */
   applyDiagnostic: (recommendedLevelId: string, wpm: number, accuracy: number) => void;
   skipDiagnostic: () => void;
@@ -40,6 +52,7 @@ export const useGame = create<GameState>()(
       musicOn: true,
       diagnosticDone: false,
       recommendedLevelId: null,
+      difficulty: 'normal',
       setPlayerName: (name) => set({ playerName: name }),
       recordLevel: (levelId, score) =>
         set((s) => {
@@ -75,15 +88,15 @@ export const useGame = create<GameState>()(
       },
       toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
       toggleMusic: () => set((s) => ({ musicOn: !s.musicOn })),
+      setDifficulty: (d) => set({ difficulty: d }),
       applyDiagnostic: (recId) => set({ diagnosticDone: true, recommendedLevelId: recId }),
       skipDiagnostic: () => set({ diagnosticDone: true }),
       resetProgress: () => set({ scores: {}, diagnosticDone: false, recommendedLevelId: null }),
     }),
     {
       name: 'digitaai:progress',
-      version: 2,
+      version: 3,
       migrate: (persisted, fromVersion) => {
-        // v0/v1 → v2: adicionar campos do diagnóstico.
         const s = (persisted ?? {}) as Partial<GameState>;
         if (fromVersion < 2) {
           return {
@@ -91,7 +104,11 @@ export const useGame = create<GameState>()(
             diagnosticDone: s.diagnosticDone ?? false,
             recommendedLevelId: s.recommendedLevelId ?? null,
             musicOn: s.musicOn ?? true,
+            difficulty: s.difficulty ?? 'normal',
           } as GameState;
+        }
+        if (fromVersion < 3) {
+          return { ...s, difficulty: s.difficulty ?? 'normal' } as GameState;
         }
         return s as GameState;
       },

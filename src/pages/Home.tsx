@@ -23,6 +23,8 @@ export function Home() {
     musicOn,
     toggleSound,
     toggleMusic,
+    difficulty,
+    setDifficulty,
   } = useGame();
 
   useEffect(() => {
@@ -153,6 +155,35 @@ export function Home() {
           >
             ❤️ Apoiar
           </button>
+          <div
+            role="radiogroup"
+            aria-label="Dificuldade"
+            title="Velocidade dos desafios"
+            className="bg-white/85 rounded-full shadow-pop flex items-center p-1 gap-1"
+          >
+            {([
+              { key: 'easy', emoji: '🐢', label: 'Fácil' },
+              { key: 'normal', emoji: '🐰', label: 'Normal' },
+              { key: 'hard', emoji: '🚀', label: 'Rápido' },
+            ] as const).map((opt) => {
+              const active = difficulty === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setDifficulty(opt.key)}
+                  title={`${opt.label} — ${opt.key === 'easy' ? 'mais tempo pra digitar' : opt.key === 'hard' ? 'menos tempo, mais desafio' : 'velocidade padrão'}`}
+                  className={`px-3 py-1 rounded-full text-sm font-bold transition ${
+                    active ? 'bg-candy text-white shadow-pop' : 'text-gray-600 hover:bg-white'
+                  }`}
+                >
+                  <span className="mr-1">{opt.emoji}</span>
+                  <span className="hidden sm:inline">{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
           <button
             onClick={toggleMusic}
             title="Música"

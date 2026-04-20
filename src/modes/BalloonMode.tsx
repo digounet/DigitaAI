@@ -11,6 +11,7 @@ import { getLessonPosition, getWorldMeta } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
+import { useGame, DIFFICULTY_SPEED_MULTIPLIER } from '../store/gameStore';
 
 /** Normaliza para exibição no teclado virtual (ã → a). */
 function baseKey(ch: string): string {
@@ -74,7 +75,8 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
   statsCorrectRef.current = stats.correct;
   statsTotalRef.current = stats.total;
 
-  const speed = level.speed ?? 6;
+  const difficulty = useGame((s) => s.difficulty);
+  const speed = (level.speed ?? 6) * DIFFICULTY_SPEED_MULTIPLIER[difficulty];
 
   // Reset de scroll e "nudge" de render: depois do mount inicial, forçamos
   // um update num próximo frame pra garantir que layout + AnimatePresence +

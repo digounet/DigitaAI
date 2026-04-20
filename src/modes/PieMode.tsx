@@ -11,6 +11,7 @@ import { getLessonPosition, getWorldMeta } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
+import { useGame, DIFFICULTY_SPEED_MULTIPLIER } from '../store/gameStore';
 
 function baseKey(ch: string): string {
   return ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -71,7 +72,8 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   statsCorrectRef.current = stats.correct;
   statsTotalRef.current = stats.total;
 
-  const speed = level.speed ?? 10;
+  const difficulty = useGame((s) => s.difficulty);
+  const speed = (level.speed ?? 10) * DIFFICULTY_SPEED_MULTIPLIER[difficulty];
 
   // Nudge de render depois do mount — mesma mitigação do BalloonMode pra
   // quando a navegação é por Enter e o keydown ainda está propagando.
