@@ -38,6 +38,17 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
   const nextChar = phrase[typed.length] ?? '';
   const finger = fingerFor(nextChar);
 
+  // Nudge pós-mount: força reconciliação depois do layout inicial pra evitar
+  // render vazio quando a navegação veio de um Enter com dispatch de keydown
+  // ainda em curso.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const id = window.requestAnimationFrame(() => {
+      setPhraseIdx((v) => v);
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
   // Refs pra handlers estáveis que leem estado atual
   const phraseRef = useRef(phrase);
   const typedRef = useRef(typed);

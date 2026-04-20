@@ -70,7 +70,13 @@ export function useToolbarKeyboardNav(count: number, opts: Opts = {}) {
         case ' ':
           if (focusedRef.current >= 0) {
             e.preventDefault();
-            refs.current[focusedRef.current]?.click();
+            const target = refs.current[focusedRef.current];
+            // Deferimos o click pro próximo tick pra deixar o evento keydown
+            // terminar antes de disparar navegação. Sem isso, .click() síncrono
+            // rodava React Router pra navegar no meio do dispatch e a nova
+            // página montava com efeitos iniciais que ficavam "engolidos"
+            // pelo ciclo de evento ainda rolando.
+            setTimeout(() => target?.click(), 0);
           }
           break;
         // Esc é tratado pelo mode/pausa — o hook não intercepta.

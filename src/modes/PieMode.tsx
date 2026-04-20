@@ -73,6 +73,16 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
 
   const speed = level.speed ?? 10;
 
+  // Nudge de render depois do mount — mesma mitigação do BalloonMode pra
+  // quando a navegação é por Enter e o keydown ainda está propagando.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const id = window.requestAnimationFrame(() => {
+      setCleared((c) => c);
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
   // Ticker: só dá dica quando a torta já entrou na área visível.
   useEffect(() => {
     const tick = () => {

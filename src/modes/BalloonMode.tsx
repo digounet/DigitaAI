@@ -76,6 +76,20 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
 
   const speed = level.speed ?? 6;
 
+  // Reset de scroll e "nudge" de render: depois do mount inicial, forçamos
+  // um update num próximo frame pra garantir que layout + AnimatePresence +
+  // spawn se reestabelecem mesmo quando a navegação foi disparada via Enter
+  // (onde o keydown ainda estava propagando durante o mount).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const id = window.requestAnimationFrame(() => {
+      // noop — só força um commit extra. O próprio RAF já garante que o
+      // React reconcilie uma vez depois do layout inicial.
+      setCleared((c) => c);
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
   // Atualiza "próxima letra-alvo" com ticker — precisa ser periódico porque
   // a visibilidade depende do tempo (visibleAfter), não só do state.
   useEffect(() => {
