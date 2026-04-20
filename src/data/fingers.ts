@@ -36,6 +36,9 @@ export const KEY_ROWS: string[][] = [
 ];
 
 export const KEY_FINGER: Record<string, Finger> = {
+  // números (linha superior)
+  '1': 1, '2': 2, '3': 3, '4': 4, '5': 4,
+  '6': 5, '7': 5, '8': 6, '9': 7, '0': 8,
   // linha de cima
   q: 1, w: 2, e: 3, r: 4, t: 4,
   y: 5, u: 5, i: 6, o: 7, p: 8,
@@ -44,7 +47,9 @@ export const KEY_FINGER: Record<string, Finger> = {
   h: 5, j: 5, k: 6, l: 7, 'ç': 8,
   // linha de baixo
   z: 1, x: 2, c: 3, v: 4, b: 4,
-  n: 5, m: 5,
+  n: 5, m: 5, ',': 6, '.': 7, ';': 7, '/': 8,
+  // pontuação comum
+  '!': 1, '?': 8,
   // espaço
   ' ': 9,
 };

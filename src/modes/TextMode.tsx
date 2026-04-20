@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard } from '../components/Keyboard';
 import { HUD } from '../components/HUD';
 import { ResultModal } from '../components/ResultModal';
 import { Mascot } from '../components/Mascot';
+import { PauseOverlay } from '../components/PauseOverlay';
 import { FINGER_COLORS, FINGER_NAMES, fingerFor } from '../data/fingers';
 import type { Level } from '../data/levels';
 import { getLessonPosition, getWorldMeta } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
+import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playStar, playWordDone, unlockAudio } from '../audio/sfx';
 
 type Props = {
@@ -18,55 +20,62 @@ type Props = {
   isText?: boolean;
 };
 
+/** Normaliza para exibição no teclado virtual (ã → a). */
+function baseKey(ch: string): string {
+  return ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: Props) {
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [typed, setTyped] = useState('');
   const [errorsOnWord, setErrorsOnWord] = useState(false);
   const [lastKey, setLastKey] = useState<string | undefined>();
   const [finished, setFinished] = useState<null | { stars: number; wpm: number; accuracy: number }>(null);
+  const [paused, setPaused] = useState(false);
   const { stats, registerHit, registerMiss, reset } = useTypingStats();
 
   const phrase = level.pool[phraseIdx] ?? '';
-
   const nextChar = phrase[typed.length] ?? '';
   const finger = fingerFor(nextChar);
 
-  const handler = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (finished) return;
-      const key = e.key;
+  // Refs pra handlers estáveis que leem estado atual
+  const phraseRef = useRef(phrase);
+  const typedRef = useRef(typed);
+  const phraseIdxRef = useRef(phraseIdx);
+  const finishedRef = useRef(false);
+  const pausedRef = useRef(false);
+  phraseRef.current = phrase;
+  typedRef.current = typed;
+  phraseIdxRef.current = phraseIdx;
+  finishedRef.current = !!finished;
+  pausedRef.current = paused;
+
+  const { inputEl } = useTypingInput({
+    onChar: (ch) => {
+      if (finishedRef.current || pausedRef.current) return;
       unlockAudio();
-      if (key === 'Backspace') {
-        setTyped((t) => t.slice(0, -1));
-        return;
-      }
-      if (key.length !== 1) return;
+      setLastKey(baseKey(ch));
+      window.setTimeout(() => setLastKey((k) => (k === baseKey(ch) ? undefined : k)), 120);
 
-      setLastKey(key.toLowerCase());
-      setTimeout(() => setLastKey(undefined), 120);
-
-      const expected = phrase[typed.length];
+      const expected = phraseRef.current[typedRef.current.length];
       if (!expected) return;
 
-      if (key === expected || (key.toLowerCase() === expected.toLowerCase())) {
+      if (ch === expected || ch.toLowerCase() === expected.toLowerCase()) {
         playKey();
         registerHit();
-        const newTyped = typed + expected;
+        const newTyped = typedRef.current + expected;
         setTyped(newTyped);
         setErrorsOnWord(false);
-        if (newTyped === phrase) {
+        if (newTyped === phraseRef.current) {
           playWordDone();
-          // avançar
-          const ni = phraseIdx + 1;
+          const ni = phraseIdxRef.current + 1;
           if (ni >= level.pool.length) {
             const acc = stats.accuracy;
             const wpm = stats.wpm;
-            const stars = starsFor(acc, wpm, level.goalWpm);
             playStar();
-            setFinished({ stars, wpm, accuracy: acc });
+            setFinished({ stars: starsFor(acc, wpm, level.goalWpm), wpm, accuracy: acc });
           } else {
-            setTimeout(() => {
+            window.setTimeout(() => {
               setPhraseIdx(ni);
               setTyped('');
             }, 600);
@@ -78,13 +87,14 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
         setErrorsOnWord(true);
       }
     },
-    [typed, phrase, phraseIdx, level.pool.length, level.goalWpm, registerHit, registerMiss, finished, stats.accuracy, stats.wpm]
-  );
-
-  useEffect(() => {
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [handler]);
+    onBackspace: () => {
+      if (finishedRef.current || pausedRef.current) return;
+      setTyped((t) => t.slice(0, -1));
+    },
+    onEscape: () => {
+      if (!finishedRef.current) setPaused((p) => !p);
+    },
+  });
 
   const progress = useMemo(() => {
     const totalChars = level.pool.reduce((a, b) => a + b.length, 0);
@@ -105,6 +115,7 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
           const p = getLessonPosition(level);
           return `Lição ${p.index}/${p.total}`;
         })()}
+        onPause={finished ? undefined : () => setPaused(true)}
       />
 
       <div className="flex-1 flex flex-col items-center justify-center pt-24 px-4 pb-2 overflow-y-auto">
@@ -161,8 +172,10 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
       </div>
 
       <div className="px-2 pb-3">
-        <Keyboard highlight={nextChar.toLowerCase()} lastPressed={lastKey} />
+        <Keyboard highlight={baseKey(nextChar)} lastPressed={lastKey} />
       </div>
+
+      {inputEl}
 
       {finished && (
         <ResultModal
@@ -188,6 +201,20 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
         />
       )}
       {finished && <FinishTrigger onFinish={() => onFinish(finished.stars, finished.wpm, finished.accuracy)} />}
+
+      {paused && !finished && (
+        <PauseOverlay
+          onResume={() => setPaused(false)}
+          onHome={onHome}
+          onRestart={() => {
+            reset();
+            setTyped('');
+            setPhraseIdx(0);
+            setPaused(false);
+            onRetry();
+          }}
+        />
+      )}
     </div>
   );
 }

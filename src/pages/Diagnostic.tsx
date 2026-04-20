@@ -6,7 +6,12 @@ import { Keyboard } from '../components/Keyboard';
 import { FINGER_COLORS, FINGER_NAMES, fingerFor } from '../data/fingers';
 import { LEVELS, recommendLevelId } from '../data/levels';
 import { useGame } from '../store/gameStore';
+import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playLevelUp, unlockAudio } from '../audio/sfx';
+
+function baseKey(ch: string): string {
+  return ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
 
 // Frase curta que exercita várias linhas do teclado.
 const TEST_PHRASE = 'o sol brilha no ceu azul enquanto o gato pula no muro';
@@ -42,36 +47,34 @@ export function Diagnostic() {
   const nextChar = TEST_PHRASE[typed.length] ?? '';
   const finger = fingerFor(nextChar);
 
-  // teclado
-  useEffect(() => {
-    if (phase !== 'typing') return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const k = e.key;
-      if (k === 'Backspace') {
-        setTyped((t) => t.slice(0, -1));
-        return;
-      }
-      if (k.length !== 1) return;
+  const typingPhaseRef = useRef(phase);
+  const typedRef = useRef(typed);
+  typingPhaseRef.current = phase;
+  typedRef.current = typed;
+
+  const { inputEl } = useTypingInput({
+    onChar: (ch) => {
+      if (typingPhaseRef.current !== 'typing') return;
       unlockAudio();
-      setLastKey(k.toLowerCase());
-      setTimeout(() => setLastKey(undefined), 120);
-      const expected = TEST_PHRASE[typed.length];
+      setLastKey(baseKey(ch));
+      window.setTimeout(() => setLastKey(undefined), 120);
+      const expected = TEST_PHRASE[typedRef.current.length];
       if (!expected) return;
-      if (k.toLowerCase() === expected.toLowerCase()) {
+      if (ch.toLowerCase() === expected.toLowerCase()) {
         playKey();
-        const nt = typed + expected;
+        const nt = typedRef.current + expected;
         setTyped(nt);
         if (nt === TEST_PHRASE) finish();
       } else {
         playError();
         setErrors((n) => n + 1);
       }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, typed]);
+    },
+    onBackspace: () => {
+      if (typingPhaseRef.current !== 'typing') return;
+      setTyped((t) => t.slice(0, -1));
+    },
+  });
 
   const start = () => {
     unlockAudio();
@@ -209,8 +212,9 @@ export function Diagnostic() {
             </motion.div>
 
             <div className="mt-3">
-              <Keyboard highlight={nextChar.toLowerCase()} lastPressed={lastKey} />
+              <Keyboard highlight={baseKey(nextChar)} lastPressed={lastKey} />
             </div>
+            {inputEl}
           </div>
         )}
 

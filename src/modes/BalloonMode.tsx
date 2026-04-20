@@ -5,10 +5,17 @@ import { Keyboard } from '../components/Keyboard';
 import { HUD } from '../components/HUD';
 import { ResultModal } from '../components/ResultModal';
 import { Mascot } from '../components/Mascot';
+import { PauseOverlay } from '../components/PauseOverlay';
 import type { Level } from '../data/levels';
 import { getLessonPosition, getWorldMeta } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
+import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
+
+/** Normaliza para exibição no teclado virtual (ã → a). */
+function baseKey(ch: string): string {
+  return ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
 
 type BalloonItem = {
   id: number;
@@ -34,13 +41,14 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
   const [finished, setFinished] = useState<null | { stars: number; wpm: number; accuracy: number }>(null);
   const [lastKey, setLastKey] = useState<string | undefined>();
   const [nextTargetLetter, setNextTargetLetter] = useState<string | undefined>();
+  const [paused, setPaused] = useState(false);
   const nextIdRef = useRef(0);
   const { stats, registerHit, registerMiss, reset } = useTypingStats();
 
-  // Refs mantêm valores atuais sem re-registrar listeners/timers.
   const balloonsRef = useRef<BalloonItem[]>([]);
   const finishedRef = useRef(false);
   const clearedRef = useRef(0);
+  const pausedRef = useRef(false);
   const statsStartedAtRef = useRef<number | null>(null);
   const statsCorrectRef = useRef(0);
   const statsTotalRef = useRef(0);
@@ -48,6 +56,7 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
   balloonsRef.current = balloons;
   finishedRef.current = !!finished;
   clearedRef.current = cleared;
+  pausedRef.current = paused;
   statsStartedAtRef.current = stats.startedAt;
   statsCorrectRef.current = stats.correct;
   statsTotalRef.current = stats.total;
@@ -62,12 +71,12 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
 
   // spawn periódico — depende só do nível, não de balloons state (usa ref).
   useEffect(() => {
-    if (finished) return;
+    if (finished || paused) return;
     const maxAtOnce = level.maxAtOnce ?? Math.min(3, 1 + Math.floor(level.target / 8));
     const spawnEvery = Math.max(1500, (speed * 1000) / Math.max(1, maxAtOnce));
 
     const doSpawn = () => {
-      if (finishedRef.current) return;
+      if (finishedRef.current || pausedRef.current) return;
       const aliveCount = balloonsRef.current.filter((x) => !x.popped).length;
       if (aliveCount >= maxAtOnce) return;
       const nid = ++nextIdRef.current;
@@ -79,18 +88,20 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
     doSpawn();
     const id = setInterval(doSpawn, spawnEvery);
     return () => clearInterval(id);
-  }, [finished, speed, level.target, level.pool, level.maxAtOnce]);
+  }, [finished, paused, speed, level.target, level.pool, level.maxAtOnce]);
 
-  // Listener de teclado — registrado UMA vez, lê estado via refs.
+  // Ao pausar, limpa balões pendentes pra não continuarem subindo "atrás" do overlay.
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (finishedRef.current) return;
-      const key = e.key.toLowerCase();
-      if (key.length !== 1) return;
+    if (paused) setBalloons([]);
+  }, [paused]);
+
+  const { inputEl } = useTypingInput({
+    onChar: (ch) => {
+      if (finishedRef.current || pausedRef.current) return;
       unlockAudio();
-      setLastKey(key);
-      window.setTimeout(() => setLastKey((k) => (k === key ? undefined : k)), 120);
+      const key = ch.toLowerCase();
+      setLastKey(baseKey(ch));
+      window.setTimeout(() => setLastKey((k) => (k === baseKey(ch) ? undefined : k)), 120);
       playKey();
 
       const target = balloonsRef.current.find((b) => !b.popped && b.letter.toLowerCase() === key);
@@ -118,10 +129,11 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
         playError();
         registerMiss();
       }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [level.target, registerHit, registerMiss]);
+    },
+    onEscape: () => {
+      if (!finishedRef.current) setPaused((p) => !p);
+    },
+  });
 
   const handleBalloonEscape = useCallback((id: number) => {
     setBalloons((list) => {
@@ -150,6 +162,7 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
           const p = getLessonPosition(level);
           return `Lição ${p.index}/${p.total}`;
         })()}
+        onPause={finished ? undefined : () => setPaused(true)}
       />
 
       <div className="absolute left-3 bottom-28 hidden md:block">
@@ -180,8 +193,10 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       </div>
 
       <div className="absolute bottom-3 left-0 right-0 px-2">
-        <Keyboard highlight={nextTargetLetter?.toLowerCase()} lastPressed={lastKey} compact />
+        <Keyboard highlight={nextTargetLetter ? baseKey(nextTargetLetter) : undefined} lastPressed={lastKey} compact />
       </div>
+
+      {inputEl}
 
       {finished && (
         <ResultModal
@@ -206,6 +221,21 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
 
       {finished && (
         <FinishTrigger onFinish={() => onFinish(finished.stars, finished.wpm, finished.accuracy)} />
+      )}
+
+      {paused && !finished && (
+        <PauseOverlay
+          onResume={() => setPaused(false)}
+          onHome={onHome}
+          onRestart={() => {
+            reset();
+            setCleared(0);
+            setMissed(0);
+            setBalloons([]);
+            setPaused(false);
+            onRetry();
+          }}
+        />
       )}
     </div>
   );

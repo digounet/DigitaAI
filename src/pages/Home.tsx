@@ -97,6 +97,12 @@ export function Home() {
           >
             🎯 Teste de nivelamento
           </Link>
+          <Link
+            to="/ranking"
+            className="bg-white/85 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
+          >
+            🏆 Ranking
+          </Link>
         </div>
 
         {!diagnosticDone && (

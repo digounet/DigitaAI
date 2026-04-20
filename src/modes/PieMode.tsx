@@ -5,10 +5,16 @@ import { Keyboard } from '../components/Keyboard';
 import { HUD } from '../components/HUD';
 import { ResultModal } from '../components/ResultModal';
 import { Mascot } from '../components/Mascot';
+import { PauseOverlay } from '../components/PauseOverlay';
 import type { Level } from '../data/levels';
 import { getLessonPosition, getWorldMeta } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
+import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
+
+function baseKey(ch: string): string {
+  return ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
 
 type PieItem = {
   id: number;
@@ -36,6 +42,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [lastKey, setLastKey] = useState<string | undefined>();
   const [nextLetter, setNextLetter] = useState<string | undefined>();
+  const [paused, setPaused] = useState(false);
   const nextIdRef = useRef(0);
   const { stats, registerHit, registerMiss, reset } = useTypingStats();
 
@@ -43,6 +50,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   const activeIdRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
   const clearedRef = useRef(0);
+  const pausedRef = useRef(false);
   const statsStartedAtRef = useRef<number | null>(null);
   const statsCorrectRef = useRef(0);
   const statsTotalRef = useRef(0);
@@ -51,6 +59,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   activeIdRef.current = activeId;
   finishedRef.current = !!finished;
   clearedRef.current = cleared;
+  pausedRef.current = paused;
   statsStartedAtRef.current = stats.startedAt;
   statsCorrectRef.current = stats.correct;
   statsTotalRef.current = stats.total;
@@ -69,11 +78,11 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   }, [pies, activeId]);
 
   useEffect(() => {
-    if (finished) return;
+    if (finished || paused) return;
     const maxAtOnce = level.maxAtOnce ?? 2;
     const every = Math.max(2000, (speed * 1000) / Math.max(1, maxAtOnce));
     const doSpawn = () => {
-      if (finishedRef.current) return;
+      if (finishedRef.current || pausedRef.current) return;
       const aliveCount = piesRef.current.filter((x) => !x.popped).length;
       if (aliveCount >= maxAtOnce) return;
       const nid = ++nextIdRef.current;
@@ -84,26 +93,22 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
     doSpawn();
     const id = setInterval(doSpawn, every);
     return () => clearInterval(id);
-  }, [finished, speed, level.pool, level.maxAtOnce]);
+  }, [finished, paused, speed, level.pool, level.maxAtOnce]);
 
-  // Listener estável via refs.
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (finishedRef.current) return;
-      const key = e.key;
-      if (key === 'Backspace') {
-        const aid = activeIdRef.current;
-        if (aid !== null) {
-          setPies((list) => list.map((p) => (p.id === aid ? { ...p, typed: p.typed.slice(0, -1) } : p)));
-        }
-        return;
-      }
-      if (key.length !== 1) return;
+    if (paused) {
+      setPies([]);
+      setActiveId(null);
+    }
+  }, [paused]);
+
+  const { inputEl } = useTypingInput({
+    onChar: (ch) => {
+      if (finishedRef.current || pausedRef.current) return;
       unlockAudio();
-      const lk = key.toLowerCase();
-      setLastKey(lk);
-      window.setTimeout(() => setLastKey((k) => (k === lk ? undefined : k)), 120);
+      const lk = ch.toLowerCase();
+      setLastKey(baseKey(ch));
+      window.setTimeout(() => setLastKey((k) => (k === baseKey(ch) ? undefined : k)), 120);
       playKey();
 
       let targetId = activeIdRef.current;
@@ -153,10 +158,18 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         playError();
         registerMiss();
       }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [level.target, registerHit, registerMiss]);
+    },
+    onBackspace: () => {
+      if (finishedRef.current || pausedRef.current) return;
+      const aid = activeIdRef.current;
+      if (aid !== null) {
+        setPies((list) => list.map((p) => (p.id === aid ? { ...p, typed: p.typed.slice(0, -1) } : p)));
+      }
+    },
+    onEscape: () => {
+      if (!finishedRef.current) setPaused((p) => !p);
+    },
+  });
 
   const handleEscape = useCallback((id: number) => {
     setPies((list) => {
@@ -186,6 +199,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
           const p = getLessonPosition(level);
           return `Lição ${p.index}/${p.total}`;
         })()}
+        onPause={finished ? undefined : () => setPaused(true)}
       />
 
       <div className="absolute left-3 bottom-28 hidden md:block">
@@ -216,8 +230,10 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
       </div>
 
       <div className="absolute bottom-3 left-0 right-0 px-2">
-        <Keyboard highlight={nextLetter} lastPressed={lastKey} compact />
+        <Keyboard highlight={nextLetter ? baseKey(nextLetter) : undefined} lastPressed={lastKey} compact />
       </div>
+
+      {inputEl}
 
       {finished && (
         <ResultModal
@@ -245,6 +261,22 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         />
       )}
       {finished && <FinishTrigger onFinish={() => onFinish(finished.stars, finished.wpm, finished.accuracy)} />}
+
+      {paused && !finished && (
+        <PauseOverlay
+          onResume={() => setPaused(false)}
+          onHome={onHome}
+          onRestart={() => {
+            reset();
+            setCleared(0);
+            setMissed(0);
+            setPies([]);
+            setActiveId(null);
+            setPaused(false);
+            onRetry();
+          }}
+        />
+      )}
     </div>
   );
 }

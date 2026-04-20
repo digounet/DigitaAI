@@ -14,9 +14,11 @@ type Props = {
   /** Emoji do mundo, exibido no crachá */
   worldEmoji?: string;
   right?: React.ReactNode;
+  /** Se fornecido, mostra botão de pausar. */
+  onPause?: () => void;
 };
 
-export function HUD({ title, subtitle, progress, worldLabel, lessonLabel, worldEmoji, right }: Props) {
+export function HUD({ title, subtitle, progress, worldLabel, lessonLabel, worldEmoji, right, onPause }: Props) {
   const { soundOn, toggleSound, totalStars } = useGame();
 
   useEffect(() => {
@@ -65,6 +67,16 @@ export function HUD({ title, subtitle, progress, worldLabel, lessonLabel, worldE
             <span className="text-lg leading-none">⭐</span>
             <span className="font-bold">{totalStars()}</span>
           </div>
+          {onPause && (
+            <button
+              onClick={onPause}
+              aria-label="Pausar jogo"
+              title="Pausar (Esc)"
+              className="h-10 w-10 md:h-11 md:w-11 rounded-full bg-grape text-white shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition"
+            >
+              ⏸️
+            </button>
+          )}
           <button
             onClick={toggleSound}
             aria-label={soundOn ? 'Desligar som' : 'Ligar som'}

@@ -59,27 +59,30 @@ export function ResultModal({ stars, accuracy, wpm, onRetry, onNext, onHome }: P
             <div className="text-2xl font-bold">{Math.round(wpm)} PPM</div>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 justify-center">
+        {/* Ação primária: voltar ao menu. Próximo nível só se a criança pedir. */}
+        <div className="flex flex-col gap-2">
           <button
             onClick={onHome}
-            className="flex-1 py-3 rounded-2xl bg-gray-200 font-bold hover:bg-gray-300 transition"
+            className="py-3 rounded-2xl bg-grass text-white font-bold text-lg hover:scale-[1.02] transition"
           >
-            🏠 Início
+            🏠 Voltar ao mapa
           </button>
-          <button
-            onClick={onRetry}
-            className="flex-1 py-3 rounded-2xl bg-sun font-bold hover:scale-[1.02] transition"
-          >
-            🔁 De novo
-          </button>
-          {onNext && (
+          <div className="flex gap-2">
             <button
-              onClick={onNext}
-              className="flex-1 py-3 rounded-2xl bg-grass text-white font-bold hover:scale-[1.02] transition"
+              onClick={onRetry}
+              className="flex-1 py-3 rounded-2xl bg-sun font-bold hover:scale-[1.02] transition"
             >
-              Próximo ➡️
+              🔁 De novo
             </button>
-          )}
+            {onNext && (
+              <button
+                onClick={onNext}
+                className="flex-1 py-3 rounded-2xl bg-white border-2 border-grape text-grape font-bold hover:bg-grape hover:text-white transition"
+              >
+                Próximo ➡️
+              </button>
+            )}
+          </div>
         </div>
       </motion.div>
     </div>
