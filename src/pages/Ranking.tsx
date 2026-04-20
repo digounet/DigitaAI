@@ -5,6 +5,7 @@ import { Mascot } from '../components/Mascot';
 import { fetchTop, type LeaderboardEntry } from '../services/leaderboard';
 import { ensureAuth } from '../firebase';
 import { useGame } from '../store/gameStore';
+import { AdSlot } from '../components/AdSlot';
 
 export function Ranking() {
   const { playerName } = useGame();
@@ -125,6 +126,8 @@ export function Ranking() {
             O placar atualiza sozinho conforme você ganha estrelas. Seu nome aparece só se estiver preenchido na tela inicial.
           </p>
         </motion.div>
+
+        <AdSlot slotId={import.meta.env.VITE_ADSENSE_SLOT_RANKING as string | undefined} />
       </div>
     </div>
   );

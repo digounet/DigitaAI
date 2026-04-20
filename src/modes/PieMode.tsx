@@ -97,11 +97,12 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   }, [finished, paused, speed, level.pool, level.maxAtOnce]);
 
   useEffect(() => {
-    if (paused) {
+    // Limpa tortinhas na pausa OU no final da lição.
+    if (paused || finished) {
       setPies([]);
       setActiveId(null);
     }
-  }, [paused]);
+  }, [paused, finished]);
 
   const { inputEl } = useTypingInput({
     onChar: (ch) => {
@@ -175,7 +176,8 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   const handleEscape = useCallback((id: number) => {
     setPies((list) => {
       const p = list.find((x) => x.id === id);
-      if (p && !p.popped) {
+      // Não conta erro se a lição já acabou ou está pausada.
+      if (p && !p.popped && !finishedRef.current && !pausedRef.current) {
         playError();
         setMissed((m) => m + 1);
         registerMiss();

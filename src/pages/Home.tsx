@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mascot } from '../components/Mascot';
 import { AuthBadge } from '../components/AuthBadge';
+import { AdSlot } from '../components/AdSlot';
+import { DonationModal } from '../components/DonationModal';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { WORLDS, getLevelsByWorld, LEVELS } from '../data/levels';
 import { useGame } from '../store/gameStore';
-import { useEffect, useMemo, useRef } from 'react';
 import { unlockAudio } from '../audio/sfx';
 
 export function Home() {
@@ -37,6 +39,8 @@ export function Home() {
       window.removeEventListener('click', unlock);
     };
   }, []);
+
+  const [donationOpen, setDonationOpen] = useState(false);
 
   const recommendedLevel = recommendedLevelId ? LEVELS.find((l) => l.id === recommendedLevelId) : null;
 
@@ -114,6 +118,18 @@ export function Home() {
           >
             🏆 Ranking
           </Link>
+          <Link
+            to="/pro"
+            className="bg-gradient-to-r from-grape to-candy text-white rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm font-bold"
+          >
+            ✨ Pro
+          </Link>
+          <button
+            onClick={() => setDonationOpen(true)}
+            className="bg-coral/90 text-white rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
+          >
+            ❤️ Apoiar
+          </button>
           <button
             onClick={toggleMusic}
             title="Música"
@@ -260,6 +276,8 @@ export function Home() {
             </section>
           );
         })}
+
+        <AdSlot slotId={import.meta.env.VITE_ADSENSE_SLOT_HOME as string | undefined} />
       </main>
 
       <div className="fixed bottom-3 right-3 z-20">
@@ -269,6 +287,8 @@ export function Home() {
       <footer className="fixed bottom-0 left-0 right-0 z-10 pointer-events-none">
         <div className="h-16 grass-bg" />
       </footer>
+
+      {donationOpen && <DonationModal onClose={() => setDonationOpen(false)} />}
     </div>
   );
 }

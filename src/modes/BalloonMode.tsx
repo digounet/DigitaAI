@@ -92,10 +92,11 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
     return () => clearInterval(id);
   }, [finished, paused, speed, level.target, level.pool, level.maxAtOnce]);
 
-  // Ao pausar, limpa balões pendentes pra não continuarem subindo "atrás" do overlay.
+  // Ao pausar ou finalizar, limpa balões pendentes pra não continuarem subindo
+  // atrás do overlay/modal (e evita que eles contem como erro na métrica final).
   useEffect(() => {
-    if (paused) setBalloons([]);
-  }, [paused]);
+    if (paused || finished) setBalloons([]);
+  }, [paused, finished]);
 
   const { inputEl } = useTypingInput({
     onChar: (ch) => {
@@ -140,7 +141,9 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
   const handleBalloonEscape = useCallback((id: number) => {
     setBalloons((list) => {
       const item = list.find((b) => b.id === id);
-      if (item && !item.popped) {
+      // Não conta como erro quando a lição já terminou ou está pausada —
+      // balão escapando depois do resultado não deve mexer na pontuação.
+      if (item && !item.popped && !finishedRef.current && !pausedRef.current) {
         playError();
         setMissed((m) => m + 1);
         registerMiss();
