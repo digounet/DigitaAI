@@ -28,9 +28,10 @@ type PieItem = {
   visibleAfter: number;
 };
 
-/** Fração do `speed` até a torta estar acima do teclado virtual. Tortas são
- *  mais altas que balões e começam em -180px, então um pouco mais de graça. */
-const VISIBLE_GRACE_FRACTION = 0.45;
+/** Fração do `speed` até a palavra da torta ser visível acima do teclado.
+ *  O card branco da palavra fica no topo do SVG, acima da cara fofinha —
+ *  aparece antes da torta inteira. */
+const VISIBLE_GRACE_FRACTION = 0.3;
 
 type Props = {
   level: Level;

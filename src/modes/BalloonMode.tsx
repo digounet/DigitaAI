@@ -29,17 +29,15 @@ type BalloonItem = {
 };
 
 /**
- * Fração do `speed` (tempo total de travessia) que o balão leva pra subir
- * de fora da tela, atravessar a grama e ficar acima do teclado virtual.
- * Enquanto o balão está nessa zona inferior (atrás do teclado), ele NÃO
- * conta pra destaque do teclado nem pra correspondência — senão o teclado
- * daria a dica da letra antes da criança conseguir ver o balão.
+ * Fração do `speed` (tempo total de travessia) que a LETRA do balão leva
+ * pra ficar visível acima do teclado virtual. A letra é desenhada no alto
+ * do SVG do balão (y=58 de 128, ~45% do topo), por isso aparece antes do
+ * balão estar inteiro acima do teclado.
  *
- * 40% = balão precisa estar no "terço de cima" da grama/teclado pra ser
- * considerado visível. Escala com o speed do nível (7s → 2.8s de graça,
- * 10s → 4s de graça).
+ * 25% = momento em que a letra está emergindo pra cima do teclado.
+ * Escala com o speed (7s → 1.75s, 10s → 2.5s).
  */
-const VISIBLE_GRACE_FRACTION = 0.4;
+const VISIBLE_GRACE_FRACTION = 0.25;
 
 type Props = {
   level: Level;
