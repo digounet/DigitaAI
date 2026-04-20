@@ -34,11 +34,14 @@ const HOME_ROW_DRILLS = [
   'asa', 'fala', 'sala', 'fada', 'gala',
   'flash', 'halls',
 ];
+// Um passinho acima dos DRILLS básicos — ainda só letras da linha de base,
+// e no máximo 5 caracteres (mundo 1 é beginner, nada de monstros tipo
+// 'asdfghjkl'). Sequências de 2-5 letras, misturando os dois lados.
 const HOME_ROW_DRILLS_HARD = [
-  'asdfg', 'hjkl', 'asdfghjkl', 'lkjhgfdsa',
-  'fasdjkl', 'dkfjsla', 'hgfdsa', 'jklhfa',
-  'gafda', 'hajka', 'lashga', 'sadjhk',
-  'flashjkl', 'hallsfa',
+  'asdf', 'jkl', 'asdfg', 'hjkl',
+  'fjdk', 'slka', 'jfds', 'lkas',
+  'gafda', 'hajka', 'lasha', 'dajha',
+  'fajka', 'sagha', 'dlash',
 ];
 
 // Palavras que usam SOMENTE base + linha de cima (após w2, antes de w3).
@@ -46,7 +49,7 @@ const HOME_ROW_DRILLS_HARD = [
 const TOP_HOME_WORDS = [
   'sol', 'lua', 'rio', 'tio', 'tua', 'seu',
   'flor', 'teto', 'foto', 'hotel', 'sapo',
-  'papel', 'rato', 'dedo', 'rua', 'peito',
+  'papel', 'rato', 'dedo', 'rua', 'feito',
   'jeito', 'quero', 'siri', 'suor', 'urso', 'partir',
 ];
 
@@ -404,7 +407,7 @@ export const LEVELS: Level[] = [
   { id: 'w16-l5', world:16, order:5, mode:'text',     title:'Poema completo',  emoji:'🌸', subtitle:'Uma pequena poesia.',    focusKeys:[], pool:['no jardim encantado onde brotam os sonhos, as flores conversam em rimas bonitinhas. o sol ri de olhos fechados e a lua escreve poemas no caderno das estrelas.'], target:1, goalWpm:24 },
 
   // ===== MUNDO 17 — LABIRINTO DAS ENROSCADAS =====
-  { id: 'w17-l1', world:17, order:1, mode:'sentence', title:'Travinhas fáceis', emoji:'🌀', subtitle:'Cuidado com a pressa.',  focusKeys:[], pool:['o rato roeu a roupa do rei','três pratos de trigo','o peito do pé do pedro é preto','boca de poço boca de pote','larga a lagarta lá'], target:5, goalWpm:20 },
+  { id: 'w17-l1', world:17, order:1, mode:'sentence', title:'Travinhas fáceis', emoji:'🌀', subtitle:'Cuidado com a pressa.',  focusKeys:[], pool:['o rato roeu a roupa do rei','três pratos de trigo','pedro pedreiro prega pregos','boca de poço boca de pote','larga a lagarta lá'], target:5, goalWpm:20 },
   { id: 'w17-l2', world:17, order:2, mode:'sentence', title:'Médias',           emoji:'🌀', subtitle:'Um pouco mais difíceis.',focusKeys:[], pool:['o tempo perguntou ao tempo quanto tempo o tempo tem','o pintor pinta pouco mas pinta bem','sai do saco do sapo o seco papo do sapo','a aranha arranha a rã a rã arranha a aranha','um tigre dois tigres três tigres trotando tristes'], target:5, goalWpm:22 },
   { id: 'w17-l3', world:17, order:3, mode:'sentence', title:'Difíceis!',        emoji:'🌀', subtitle:'Concentração total.',     focusKeys:[], pool:['o sabiá não sabia que o sábio sabia assobiar','atrás da pia tem um prato tem um pato na pia atrás','bagre branco barba preta bagre preto barba branca','a babá boba bebeu a baba do bebê','o caju do juca e a jaca do cajá'], target:5, goalWpm:22 },
   { id: 'w17-l4', world:17, order:4, mode:'sentence', title:'Muito difíceis',    emoji:'🧩', subtitle:'Quase impossível!',       focusKeys:[], pool:['o arcebispo de constantinopla se quer desconstantinopolizar','paz por favor pois o peixe apodreceu','debaixo da pia tem uma pinguela pela pinguela passa um pinguim','o rato roeu a rolha da garrafa do rei da rússia','num ninho de mafagafos seis mafagafinhos há'], target:5, goalWpm:24 },
