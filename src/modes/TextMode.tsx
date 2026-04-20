@@ -93,7 +93,8 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
       setTyped((t) => t.slice(0, -1));
     },
     onEscape: () => {
-      if (!finishedRef.current) setPaused((p) => !p);
+      // Esc só PAUSA (igual ao botão). Saída é só pelos botões do overlay.
+      if (!finishedRef.current) setPaused(true);
     },
   });
 

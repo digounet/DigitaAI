@@ -199,7 +199,8 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
       }
     },
     onEscape: () => {
-      if (!finishedRef.current) setPaused((p) => !p);
+      // Esc só PAUSA (igual ao botão). Saída é só pelos botões do overlay.
+      if (!finishedRef.current) setPaused(true);
     },
   });
 

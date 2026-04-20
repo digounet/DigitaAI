@@ -9,10 +9,8 @@ type Props = {
 };
 
 export function PauseOverlay({ onResume, onHome, onRestart }: Props) {
-  const { btnRef, focused } = useModalKeyboardNav(3, {
-    defaultIndex: 0,
-    onEscape: onResume,
-  });
+  // Sem onEscape: Esc no overlay de pausa NÃO resume. Saída só pelos botões.
+  const { btnRef, focused } = useModalKeyboardNav(3, { defaultIndex: 0 });
 
   const ring = (i: number) =>
     focused === i ? 'ring-4 ring-grape/60 outline-none' : '';
@@ -56,8 +54,7 @@ export function PauseOverlay({ onResume, onHome, onRestart }: Props) {
         </div>
         <p className="mt-4 text-xs text-gray-400">
           use <kbd className="bg-gray-100 px-1 py-0.5 rounded">↑↓</kbd> pra escolher,{' '}
-          <kbd className="bg-gray-100 px-1 py-0.5 rounded">Enter</kbd> pra confirmar,{' '}
-          <kbd className="bg-gray-100 px-1 py-0.5 rounded">Esc</kbd> pra continuar
+          <kbd className="bg-gray-100 px-1 py-0.5 rounded">Enter</kbd> pra confirmar
         </p>
       </motion.div>
     </div>

@@ -168,7 +168,9 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       }
     },
     onEscape: () => {
-      if (!finishedRef.current) setPaused((p) => !p);
+      // Esc = mesma ação do botão ⏸️: só PAUSA. Saída da pausa só
+      // pelos botões do overlay (evita fechar sem querer).
+      if (!finishedRef.current) setPaused(true);
     },
   });
 
