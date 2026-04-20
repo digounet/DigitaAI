@@ -42,11 +42,8 @@ export function useToolbarKeyboardNav(count: number) {
             refs.current[focusedRef.current]?.click();
           }
           break;
-        case 'Escape':
-          // Some visual do ring quando aperta Esc (sem perder a ação de pausa
-          // que o mode já trata).
-          setFocused(-1);
-          break;
+        // Esc é tratado exclusivamente pelo mode (toggle de pausa) — o hook
+        // da toolbar não intercepta pra não competir com essa ação.
       }
     };
     window.addEventListener('keydown', handler);

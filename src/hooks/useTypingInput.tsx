@@ -33,6 +33,11 @@ export function useTypingInput(opts: Options) {
   const enabled = opts.enabled ?? true;
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
+  // Flag ativa durante auto-repeat do SO: fica true do 2º keydown em diante
+  // até o keyup correspondente. `onInput` descarta eventos enquanto está true.
+  // Backup pro `preventDefault` do keydown — que nem sempre bloqueia o input
+  // em tempo em alguns browsers, deixando passar repetições indesejadas.
+  const repeatingRef = useRef(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -71,30 +76,44 @@ export function useTypingInput(opts: Options) {
         // instantes — processaremos no compositionend.
         const ie = e.nativeEvent as InputEvent;
         if (ie.isComposing) return;
+        // Durante auto-repeat do SO, o preventDefault do keydown nem sempre
+        // bloqueia este input em tempo (Safari especialmente). Descartamos
+        // aqui também pra garantir.
+        if (repeatingRef.current) {
+          e.currentTarget.value = '';
+          return;
+        }
         drain(e.currentTarget);
       }}
       onCompositionEnd={(e) => {
-        // `e.data` traz o caractere final resolvido (ã, ç...). Preferimos
-        // `drain(input)` pra ler o value atual — mais robusto entre browsers.
+        if (repeatingRef.current) {
+          (e.currentTarget as HTMLInputElement).value = '';
+          return;
+        }
         drain(e.currentTarget as HTMLInputElement);
       }}
       onKeyDown={(e) => {
-        // Auto-repeat do SO: segurar a tecla dispara keydown+input em loop,
-        // fazendo cada letra contar como várias tentativas e derrubando a
-        // pontuação. `e.repeat` é true a partir do 2º disparo — cortamos ali.
+        // Auto-repeat do SO: do 2º disparo em diante, `e.repeat` é true.
+        // Marcamos a flag e pedimos preventDefault (ainda que onInput tenha
+        // um backup).
         if (e.repeat) {
+          repeatingRef.current = true;
           e.preventDefault();
           return;
         }
+        // Key nova apertada → reset da flag.
+        repeatingRef.current = false;
         if (e.key === 'Escape') {
           e.preventDefault();
           optsRef.current.onEscape?.();
         } else if (e.key === 'Backspace') {
-          // Também ignoramos backspace dentro de composição — não é "apagar
-          // o que já digitou", é o navegador cancelando o dead key.
           if ((e.nativeEvent as KeyboardEvent).isComposing) return;
           optsRef.current.onBackspace?.();
         }
+      }}
+      onKeyUp={() => {
+        // Tecla solta → próximo keydown da mesma tecla não é repeat.
+        repeatingRef.current = false;
       }}
       onBlur={() => {
         requestAnimationFrame(() => {
