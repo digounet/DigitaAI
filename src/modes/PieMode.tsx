@@ -132,6 +132,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   }, [paused, finished]);
 
   const { inputEl } = useTypingInput({
+    enabled: !paused && !finished,
     onChar: (ch) => {
       if (finishedRef.current || pausedRef.current) return;
       unlockAudio();

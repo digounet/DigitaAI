@@ -4,6 +4,12 @@ type Options = {
   onChar: (ch: string) => void;
   onEscape?: () => void;
   onBackspace?: () => void;
+  /**
+   * Quando false, o input invisível para de puxar foco (no mount, no tick
+   * e no blur). Usado pelos modes pra liberar foco pros modais de pausa
+   * e resultado navegarem por teclado.
+   */
+  enabled?: boolean;
 };
 
 /**
@@ -24,14 +30,21 @@ export function useTypingInput(opts: Options) {
   const optsRef = useRef(opts);
   optsRef.current = opts;
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const enabled = opts.enabled ?? true;
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
 
   useEffect(() => {
+    if (!enabled) return;
     inputRef.current?.focus();
-  }, []);
+  }, [enabled]);
 
   // Refocus se o input perder foco (útil depois de clicar em botões modais).
+  // Mas só quando `enabled`: modais querem o foco nos seus botões e o tick
+  // roubaria de volta.
   useEffect(() => {
     const tick = () => {
+      if (!enabledRef.current) return;
       const el = inputRef.current;
       if (!el) return;
       if (document.activeElement === document.body || document.activeElement === null) {
@@ -66,6 +79,13 @@ export function useTypingInput(opts: Options) {
         drain(e.currentTarget as HTMLInputElement);
       }}
       onKeyDown={(e) => {
+        // Auto-repeat do SO: segurar a tecla dispara keydown+input em loop,
+        // fazendo cada letra contar como várias tentativas e derrubando a
+        // pontuação. `e.repeat` é true a partir do 2º disparo — cortamos ali.
+        if (e.repeat) {
+          e.preventDefault();
+          return;
+        }
         if (e.key === 'Escape') {
           e.preventDefault();
           optsRef.current.onEscape?.();
@@ -77,7 +97,9 @@ export function useTypingInput(opts: Options) {
         }
       }}
       onBlur={() => {
-        requestAnimationFrame(() => inputRef.current?.focus());
+        requestAnimationFrame(() => {
+          if (enabledRef.current) inputRef.current?.focus();
+        });
       }}
       className="fixed -left-[9999px] top-0 w-0 h-0 opacity-0 pointer-events-none"
       autoCapitalize="off"

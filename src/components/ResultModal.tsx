@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import { playLevelUp, playStar } from '../audio/sfx';
 import { Mascot } from './Mascot';
+import { useModalKeyboardNav } from '../hooks/useModalKeyboardNav';
 
 type Props = {
   stars: number;       // 0..3
@@ -22,8 +23,19 @@ export function ResultModal({ stars, accuracy, wpm, onRetry, onNext, onHome }: P
     return () => ids.forEach(clearTimeout);
   }, [stars]);
 
+  // Ordem lógica de navegação: [Voltar, De novo, Próximo?].
+  // Default: Próximo quando o nível avança (fluxo mais comum — criança passou
+  // e quer continuar); caso contrário "De novo".
+  const hasNext = !!onNext;
+  const count = hasNext ? 3 : 2;
+  const defaultIndex = hasNext ? 2 : 1;
+  const { btnRef, focused } = useModalKeyboardNav(count, { defaultIndex });
+
   const msg =
     stars === 3 ? 'Incrível!' : stars === 2 ? 'Muito bem!' : stars === 1 ? 'Boa!' : 'Quase lá!';
+
+  const ring = (i: number) =>
+    focused === i ? 'ring-4 ring-grape/60 outline-none' : '';
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -59,31 +71,37 @@ export function ResultModal({ stars, accuracy, wpm, onRetry, onNext, onHome }: P
             <div className="text-2xl font-bold">{Math.round(wpm)} PPM</div>
           </div>
         </div>
-        {/* Ação primária: voltar ao menu. Próximo nível só se a criança pedir. */}
         <div className="flex flex-col gap-2">
           <button
+            ref={btnRef(0)}
             onClick={onHome}
-            className="py-3 rounded-2xl bg-grass text-white font-bold text-lg hover:scale-[1.02] transition"
+            className={`py-3 rounded-2xl bg-grass text-white font-bold text-lg hover:scale-[1.02] transition ${ring(0)}`}
           >
             🏠 Voltar ao mapa
           </button>
           <div className="flex gap-2">
             <button
+              ref={btnRef(1)}
               onClick={onRetry}
-              className="flex-1 py-3 rounded-2xl bg-sun font-bold hover:scale-[1.02] transition"
+              className={`flex-1 py-3 rounded-2xl bg-sun font-bold hover:scale-[1.02] transition ${ring(1)}`}
             >
               🔁 De novo
             </button>
             {onNext && (
               <button
+                ref={btnRef(2)}
                 onClick={onNext}
-                className="flex-1 py-3 rounded-2xl bg-white border-2 border-grape text-grape font-bold hover:bg-grape hover:text-white transition"
+                className={`flex-1 py-3 rounded-2xl bg-white border-2 border-grape text-grape font-bold hover:bg-grape hover:text-white transition ${ring(2)}`}
               >
                 Próximo ➡️
               </button>
             )}
           </div>
         </div>
+        <p className="mt-4 text-xs text-gray-400">
+          use <kbd className="bg-gray-100 px-1 py-0.5 rounded">←→</kbd> pra escolher,{' '}
+          <kbd className="bg-gray-100 px-1 py-0.5 rounded">Enter</kbd> pra confirmar
+        </p>
       </motion.div>
     </div>
   );

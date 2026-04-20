@@ -20,8 +20,51 @@ export type Level = {
 // POOLS DE CONTEÚDO
 // =======================================================================
 
-const HOME_ROW_WORDS = ['asa', 'dá', 'fala', 'lá', 'ala', 'fada', 'saia', 'sala', 'jaca', 'lasca', 'flash', 'jazz', 'halls'];
-const HOME_ROW_WORDS_HARD = ['galho', 'falhas', 'dali', 'sadia', 'afaga', 'jade'];
+// ATENÇÃO: nos mundos 1-3, os pools devem usar SOMENTE as letras já
+// ensinadas até aquele ponto. Pseudo-palavras são bem-vindas — o objetivo
+// é treinar a posição dos dedos, não vocabulário. Um drill tipo "asdfg"
+// é melhor do que uma palavra real que contenha letras ainda não ensinadas.
+
+// Drills da LINHA DE BASE (a s d f g h j k l ç) — seguros em w1-l14/l15.
+// Sem i, e, o, z, c, v, m, etc., e sem acentos.
+const HOME_ROW_DRILLS = [
+  'fj', 'dk', 'sl', 'ga', 'ha',
+  'fjd', 'jkf', 'dfj', 'slk',
+  'asdf', 'jkl', 'aslk',
+  'asa', 'fala', 'sala', 'fada', 'gala',
+  'flash', 'halls',
+];
+const HOME_ROW_DRILLS_HARD = [
+  'asdfg', 'hjkl', 'asdfghjkl', 'lkjhgfdsa',
+  'fasdjkl', 'dkfjsla', 'hgfdsa', 'jklhfa',
+  'gafda', 'hajka', 'lashga', 'sadjhk',
+  'flashjkl', 'hallsfa',
+];
+
+// Palavras que usam SOMENTE base + linha de cima (após w2, antes de w3).
+// Sem v/b/n/m/c/x/z e sem acentos.
+const TOP_HOME_WORDS = [
+  'sol', 'lua', 'rio', 'tio', 'tua', 'seu',
+  'flor', 'teto', 'foto', 'hotel', 'sapo',
+  'papel', 'rato', 'dedo', 'rua', 'peito',
+  'jeito', 'quero', 'siri', 'suor', 'urso', 'partir',
+];
+
+// Palavras seguras até o fim do w3 — todas as letras latinas, sem acentos.
+const ANIMAL_WORDS_BASE = [
+  'gato', 'peixe', 'pato', 'rato', 'galo', 'coelho',
+  'urso', 'cavalo', 'tigre', 'macaco', 'foca', 'zebra',
+  'pomba', 'burro',
+];
+const SIMPLE_WORDS_BASE = [
+  'sol', 'lua', 'rio', 'tio', 'flor', 'teto', 'foto',
+  'papel', 'sapo', 'hotel', 'rato', 'dedo', 'casa',
+  'mesa', 'bolo', 'suco', 'uva',
+];
+const MEDIUM_WORDS_BASE = [
+  'escola', 'amigo', 'brincar', 'jardim', 'alegria',
+  'sonhar', 'cantar', 'pintar', 'correr',
+];
 
 const SIMPLE_WORDS = ['sol', 'lua', 'pão', 'pipa', 'rio', 'casa', 'mel', 'uva', 'azul', 'flor', 'teto', 'tio'];
 const ANIMAL_WORDS = ['gato', 'cão', 'peixe', 'pato', 'leão', 'rato', 'galo', 'coelho', 'urso', 'cavalo', 'tigre', 'macaco'];
@@ -178,55 +221,55 @@ const only = (chars: string[]): string[] => chars;
 
 export const LEVELS: Level[] = [
   // ===== MUNDO 1 — LINHA DE BASE =====
-  { id: 'w1-l1',  world:1, order:1,  mode:'balloons', title:'Descubra F', emoji:'🎈', subtitle:'Indicador esquerdo. Sinta o relevinho!',         focusKeys:['f'],        pool:only(['f']),                 target:6,  speed:9,  maxAtOnce:1 },
-  { id: 'w1-l2',  world:1, order:2,  mode:'balloons', title:'Descubra J', emoji:'🎈', subtitle:'Indicador direito. Relevinho também!',            focusKeys:['j'],        pool:only(['j']),                 target:6,  speed:9,  maxAtOnce:1 },
-  { id: 'w1-l3',  world:1, order:3,  mode:'balloons', title:'F e J juntos', emoji:'🎈', subtitle:'Alternando as teclas-guia.',                    focusKeys:['f','j'],    pool:only(['f','j']),             target:10, speed:8,  maxAtOnce:1 },
-  { id: 'w1-l4',  world:1, order:4,  mode:'balloons', title:'Descubra D', emoji:'🎈', subtitle:'Dedo médio esquerdo, coladinho no F.',            focusKeys:['d'],        pool:only(['d']),                 target:6,  speed:8,  maxAtOnce:1 },
-  { id: 'w1-l5',  world:1, order:5,  mode:'balloons', title:'Descubra K', emoji:'🎈', subtitle:'Dedo médio direito, coladinho no J.',             focusKeys:['k'],        pool:only(['k']),                 target:6,  speed:8,  maxAtOnce:1 },
-  { id: 'w1-l6',  world:1, order:6,  mode:'balloons', title:'D K F J',  emoji:'🎈', subtitle:'Os quatro dedos centrais.',                         focusKeys:['d','k','f','j'], pool:only(['d','k','f','j']), target:12, speed:8,  maxAtOnce:2 },
-  { id: 'w1-l7',  world:1, order:7,  mode:'balloons', title:'Descubra S', emoji:'🎈', subtitle:'Anelar esquerdo.',                                focusKeys:['s'],        pool:only(['s']),                 target:6,  speed:8,  maxAtOnce:1 },
-  { id: 'w1-l8',  world:1, order:8,  mode:'balloons', title:'Descubra L', emoji:'🎈', subtitle:'Anelar direito.',                                 focusKeys:['l'],        pool:only(['l']),                 target:6,  speed:8,  maxAtOnce:1 },
-  { id: 'w1-l9',  world:1, order:9,  mode:'balloons', title:'S L com as amigas', emoji:'🎈', subtitle:'Misturando com D K F J.',                  focusKeys:['s','l'],    pool:only(['s','l','d','k','f','j']), target:14, speed:8,  maxAtOnce:2 },
-  { id: 'w1-l10', world:1, order:10, mode:'balloons', title:'Descubra A', emoji:'🎈', subtitle:'Mindinho esquerdo.',                              focusKeys:['a'],        pool:only(['a']),                 target:6,  speed:7,  maxAtOnce:1 },
-  { id: 'w1-l11', world:1, order:11, mode:'balloons', title:'Descubra Ç', emoji:'🎈', subtitle:'Mindinho direito.',                               focusKeys:['ç'],        pool:only(['ç']),                 target:6,  speed:7,  maxAtOnce:1 },
-  { id: 'w1-l12', world:1, order:12, mode:'balloons', title:'Linha de base completa', emoji:'🎈', subtitle:'A S D F J K L Ç — todos os dedos!',  focusKeys:['a','ç'],    pool:only(['a','s','d','f','j','k','l','ç']), target:18, speed:7,  maxAtOnce:2 },
-  { id: 'w1-l13', world:1, order:13, mode:'balloons', title:'Descubra G e H', emoji:'🎈', subtitle:'Indicadores esticam pro meio.',                focusKeys:['g','h'],    pool:only(['g','h','f','j']),     target:12, speed:7,  maxAtOnce:2 },
-  { id: 'w1-l14', world:1, order:14, mode:'pies',     title:'Palavras da base', emoji:'🥧', subtitle:'Palavras só com a linha de base.',           focusKeys:[],           pool:HOME_ROW_WORDS,              target:8,  speed:10, maxAtOnce:1 },
-  { id: 'w1-l15', world:1, order:15, mode:'pies',     title:'Desafio da base', emoji:'🏆', subtitle:'Palavras maiores, um pouco mais rápido.',     focusKeys:[],           pool:[...HOME_ROW_WORDS,...HOME_ROW_WORDS_HARD], target:10, speed:9,  maxAtOnce:2 },
+  { id: 'w1-l1',  world:1, order:1,  mode:'balloons', title:'Descubra F', emoji:'🎈', subtitle:'Indicador esquerdo. Sinta o relevinho!',         focusKeys:['f'],        pool:only(['f']),                 target:10, speed:11, maxAtOnce:1 },
+  { id: 'w1-l2',  world:1, order:2,  mode:'balloons', title:'Descubra J', emoji:'🎈', subtitle:'Indicador direito. Relevinho também!',            focusKeys:['j'],        pool:only(['j']),                 target:10, speed:11, maxAtOnce:1 },
+  { id: 'w1-l3',  world:1, order:3,  mode:'balloons', title:'F e J juntos', emoji:'🎈', subtitle:'Alternando as teclas-guia.',                    focusKeys:['f','j'],    pool:only(['f','j']),             target:16, speed:10, maxAtOnce:1 },
+  { id: 'w1-l4',  world:1, order:4,  mode:'balloons', title:'Descubra D', emoji:'🎈', subtitle:'Dedo médio esquerdo, coladinho no F.',            focusKeys:['d'],        pool:only(['d']),                 target:10, speed:10, maxAtOnce:1 },
+  { id: 'w1-l5',  world:1, order:5,  mode:'balloons', title:'Descubra K', emoji:'🎈', subtitle:'Dedo médio direito, coladinho no J.',             focusKeys:['k'],        pool:only(['k']),                 target:10, speed:10, maxAtOnce:1 },
+  { id: 'w1-l6',  world:1, order:6,  mode:'balloons', title:'D K F J',  emoji:'🎈', subtitle:'Os quatro dedos centrais.',                         focusKeys:['d','k','f','j'], pool:only(['d','k','f','j']), target:20, speed:9,  maxAtOnce:2 },
+  { id: 'w1-l7',  world:1, order:7,  mode:'balloons', title:'Descubra S', emoji:'🎈', subtitle:'Anelar esquerdo.',                                focusKeys:['s'],        pool:only(['s']),                 target:10, speed:10, maxAtOnce:1 },
+  { id: 'w1-l8',  world:1, order:8,  mode:'balloons', title:'Descubra L', emoji:'🎈', subtitle:'Anelar direito.',                                 focusKeys:['l'],        pool:only(['l']),                 target:10, speed:10, maxAtOnce:1 },
+  { id: 'w1-l9',  world:1, order:9,  mode:'balloons', title:'S L com as amigas', emoji:'🎈', subtitle:'Misturando com D K F J.',                  focusKeys:['s','l'],    pool:only(['s','l','d','k','f','j']), target:22, speed:9,  maxAtOnce:2 },
+  { id: 'w1-l10', world:1, order:10, mode:'balloons', title:'Descubra A', emoji:'🎈', subtitle:'Mindinho esquerdo.',                              focusKeys:['a'],        pool:only(['a']),                 target:10, speed:9,  maxAtOnce:1 },
+  { id: 'w1-l11', world:1, order:11, mode:'balloons', title:'Descubra Ç', emoji:'🎈', subtitle:'Mindinho direito.',                               focusKeys:['ç'],        pool:only(['ç']),                 target:10, speed:9,  maxAtOnce:1 },
+  { id: 'w1-l12', world:1, order:12, mode:'balloons', title:'Linha de base completa', emoji:'🎈', subtitle:'A S D F J K L Ç — todos os dedos!',  focusKeys:['a','ç'],    pool:only(['a','s','d','f','j','k','l','ç']), target:26, speed:8,  maxAtOnce:2 },
+  { id: 'w1-l13', world:1, order:13, mode:'balloons', title:'Descubra G e H', emoji:'🎈', subtitle:'Indicadores esticam pro meio.',                focusKeys:['g','h'],    pool:only(['g','h','f','j']),     target:18, speed:9,  maxAtOnce:2 },
+  { id: 'w1-l14', world:1, order:14, mode:'pies',     title:'Sequências da base', emoji:'🥧', subtitle:'Só letras da linha de base — pode ser qualquer combinação!', focusKeys:[], pool:HOME_ROW_DRILLS, target:12, speed:12, maxAtOnce:1 },
+  { id: 'w1-l15', world:1, order:15, mode:'pies',     title:'Desafio da base', emoji:'🏆', subtitle:'Sequências maiores, ainda na linha de base.', focusKeys:[], pool:[...HOME_ROW_DRILLS,...HOME_ROW_DRILLS_HARD], target:12, speed:11, maxAtOnce:2 },
 
   // ===== MUNDO 2 — LINHA DE CIMA =====
-  { id: 'w2-l1',  world:2, order:1,  mode:'balloons', title:'Descubra E', emoji:'🎈', subtitle:'Dedo médio esquerdo sobe (do D).',                focusKeys:['e'],        pool:only(['e']),                 target:6,  speed:8,  maxAtOnce:1 },
-  { id: 'w2-l2',  world:2, order:2,  mode:'balloons', title:'Descubra I', emoji:'🎈', subtitle:'Dedo médio direito sobe (do K).',                 focusKeys:['i'],        pool:only(['i']),                 target:6,  speed:8,  maxAtOnce:1 },
-  { id: 'w2-l3',  world:2, order:3,  mode:'balloons', title:'E e I juntos', emoji:'🎈', subtitle:'Alternando.',                                  focusKeys:['e','i'],    pool:only(['e','i']),             target:10, speed:8,  maxAtOnce:1 },
-  { id: 'w2-l4',  world:2, order:4,  mode:'balloons', title:'E I + base', emoji:'🎈', subtitle:'Misturando com a linha de base.',                focusKeys:['e','i'],    pool:only(['e','i','d','k','f','j']), target:14, speed:7,  maxAtOnce:2 },
-  { id: 'w2-l5',  world:2, order:5,  mode:'balloons', title:'Descubra R', emoji:'🎈', subtitle:'Indicador esquerdo sobe.',                       focusKeys:['r'],        pool:only(['r']),                 target:6,  speed:8,  maxAtOnce:1 },
-  { id: 'w2-l6',  world:2, order:6,  mode:'balloons', title:'Descubra U', emoji:'🎈', subtitle:'Indicador direito sobe.',                        focusKeys:['u'],        pool:only(['u']),                 target:6,  speed:8,  maxAtOnce:1 },
-  { id: 'w2-l7',  world:2, order:7,  mode:'balloons', title:'R U + E I', emoji:'🎈', subtitle:'Juntando os indicadores.',                         focusKeys:['r','u','e','i'], pool:only(['r','u','e','i','f','j','d','k']), target:16, speed:7,  maxAtOnce:2 },
-  { id: 'w2-l8',  world:2, order:8,  mode:'balloons', title:'Descubra T', emoji:'🎈', subtitle:'Indicador esquerdo estica.',                     focusKeys:['t'],        pool:only(['t','r','f']),         target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w2-l9',  world:2, order:9,  mode:'balloons', title:'Descubra Y', emoji:'🎈', subtitle:'Indicador direito estica.',                      focusKeys:['y'],        pool:only(['y','u','j']),         target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w2-l10', world:2, order:10, mode:'balloons', title:'Descubra W', emoji:'🎈', subtitle:'Anelar esquerdo sobe.',                          focusKeys:['w'],        pool:only(['w','s']),             target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w2-l11', world:2, order:11, mode:'balloons', title:'Descubra O', emoji:'🎈', subtitle:'Anelar direito sobe.',                           focusKeys:['o'],        pool:only(['o','l']),             target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w2-l12', world:2, order:12, mode:'balloons', title:'Descubra Q', emoji:'🎈', subtitle:'Mindinho esquerdo sobe.',                        focusKeys:['q'],        pool:only(['q','a']),             target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w2-l13', world:2, order:13, mode:'balloons', title:'Descubra P', emoji:'🎈', subtitle:'Mindinho direito sobe.',                         focusKeys:['p'],        pool:only(['p','ç']),             target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w2-l14', world:2, order:14, mode:'balloons', title:'Linha de cima completa', emoji:'🎈', subtitle:'Q W E R T Y U I O P.',               focusKeys:[],           pool:only(['q','w','e','r','t','y','u','i','o','p']), target:20, speed:6,  maxAtOnce:3 },
-  { id: 'w2-l15', world:2, order:15, mode:'pies',     title:'Palavras simples', emoji:'🥧', subtitle:'Linhas de cima + base.',                     focusKeys:[],           pool:SIMPLE_WORDS,                target:10, speed:9,  maxAtOnce:2 },
+  { id: 'w2-l1',  world:2, order:1,  mode:'balloons', title:'Descubra E', emoji:'🎈', subtitle:'Dedo médio esquerdo sobe (do D).',                focusKeys:['e'],        pool:only(['e']),                 target:10, speed:10, maxAtOnce:1 },
+  { id: 'w2-l2',  world:2, order:2,  mode:'balloons', title:'Descubra I', emoji:'🎈', subtitle:'Dedo médio direito sobe (do K).',                 focusKeys:['i'],        pool:only(['i']),                 target:10, speed:10, maxAtOnce:1 },
+  { id: 'w2-l3',  world:2, order:3,  mode:'balloons', title:'E e I juntos', emoji:'🎈', subtitle:'Alternando.',                                  focusKeys:['e','i'],    pool:only(['e','i']),             target:16, speed:9,  maxAtOnce:1 },
+  { id: 'w2-l4',  world:2, order:4,  mode:'balloons', title:'E I + base', emoji:'🎈', subtitle:'Misturando com a linha de base.',                focusKeys:['e','i'],    pool:only(['e','i','d','k','f','j']), target:20, speed:8,  maxAtOnce:2 },
+  { id: 'w2-l5',  world:2, order:5,  mode:'balloons', title:'Descubra R', emoji:'🎈', subtitle:'Indicador esquerdo sobe.',                       focusKeys:['r'],        pool:only(['r']),                 target:10, speed:9,  maxAtOnce:1 },
+  { id: 'w2-l6',  world:2, order:6,  mode:'balloons', title:'Descubra U', emoji:'🎈', subtitle:'Indicador direito sobe.',                        focusKeys:['u'],        pool:only(['u']),                 target:10, speed:9,  maxAtOnce:1 },
+  { id: 'w2-l7',  world:2, order:7,  mode:'balloons', title:'R U + E I', emoji:'🎈', subtitle:'Juntando os indicadores.',                         focusKeys:['r','u','e','i'], pool:only(['r','u','e','i','f','j','d','k']), target:22, speed:8,  maxAtOnce:2 },
+  { id: 'w2-l8',  world:2, order:8,  mode:'balloons', title:'Descubra T', emoji:'🎈', subtitle:'Indicador esquerdo estica.',                     focusKeys:['t'],        pool:only(['t','r','f']),         target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w2-l9',  world:2, order:9,  mode:'balloons', title:'Descubra Y', emoji:'🎈', subtitle:'Indicador direito estica.',                      focusKeys:['y'],        pool:only(['y','u','j']),         target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w2-l10', world:2, order:10, mode:'balloons', title:'Descubra W', emoji:'🎈', subtitle:'Anelar esquerdo sobe.',                          focusKeys:['w'],        pool:only(['w','s']),             target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w2-l11', world:2, order:11, mode:'balloons', title:'Descubra O', emoji:'🎈', subtitle:'Anelar direito sobe.',                           focusKeys:['o'],        pool:only(['o','l']),             target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w2-l12', world:2, order:12, mode:'balloons', title:'Descubra Q', emoji:'🎈', subtitle:'Mindinho esquerdo sobe.',                        focusKeys:['q'],        pool:only(['q','a']),             target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w2-l13', world:2, order:13, mode:'balloons', title:'Descubra P', emoji:'🎈', subtitle:'Mindinho direito sobe.',                         focusKeys:['p'],        pool:only(['p','ç']),             target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w2-l14', world:2, order:14, mode:'balloons', title:'Linha de cima completa', emoji:'🎈', subtitle:'Q W E R T Y U I O P.',               focusKeys:[],           pool:only(['q','w','e','r','t','y','u','i','o','p']), target:26, speed:7,  maxAtOnce:3 },
+  { id: 'w2-l15', world:2, order:15, mode:'pies',     title:'Palavras simples', emoji:'🥧', subtitle:'Base + linha de cima. Sem v, m, c ainda.', focusKeys:[],           pool:TOP_HOME_WORDS,              target:14, speed:10, maxAtOnce:2 },
 
   // ===== MUNDO 3 — LINHA DE BAIXO =====
-  { id: 'w3-l1',  world:3, order:1,  mode:'balloons', title:'Descubra V', emoji:'🎈', subtitle:'Indicador esquerdo desce.',                      focusKeys:['v'],        pool:only(['v','f']),             target:6,  speed:7,  maxAtOnce:1 },
-  { id: 'w3-l2',  world:3, order:2,  mode:'balloons', title:'Descubra N', emoji:'🎈', subtitle:'Indicador direito desce.',                       focusKeys:['n'],        pool:only(['n','j']),             target:6,  speed:7,  maxAtOnce:1 },
-  { id: 'w3-l3',  world:3, order:3,  mode:'balloons', title:'V e N juntos', emoji:'🎈', subtitle:'Alternando.',                                  focusKeys:['v','n'],    pool:only(['v','n']),             target:10, speed:7,  maxAtOnce:1 },
-  { id: 'w3-l4',  world:3, order:4,  mode:'balloons', title:'Descubra B', emoji:'🎈', subtitle:'Indicador esquerdo estica baixo.',               focusKeys:['b'],        pool:only(['b','v','f']),         target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w3-l5',  world:3, order:5,  mode:'balloons', title:'Descubra M', emoji:'🎈', subtitle:'Indicador direito estica baixo.',                focusKeys:['m'],        pool:only(['m','n','j']),         target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w3-l6',  world:3, order:6,  mode:'balloons', title:'V B N M',   emoji:'🎈', subtitle:'Indicadores dominados.',                           focusKeys:[],           pool:only(['v','b','n','m']),     target:14, speed:7,  maxAtOnce:2 },
-  { id: 'w3-l7',  world:3, order:7,  mode:'balloons', title:'Descubra C', emoji:'🎈', subtitle:'Médio esquerdo desce.',                          focusKeys:['c'],        pool:only(['c','d']),             target:8,  speed:7,  maxAtOnce:1 },
-  { id: 'w3-l8',  world:3, order:8,  mode:'balloons', title:'Descubra X', emoji:'🎈', subtitle:'Anelar esquerdo desce.',                         focusKeys:['x'],        pool:only(['x','s']),             target:8,  speed:6,  maxAtOnce:1 },
-  { id: 'w3-l9',  world:3, order:9,  mode:'balloons', title:'Descubra Z', emoji:'🎈', subtitle:'Mindinho esquerdo desce.',                       focusKeys:['z'],        pool:only(['z','a']),             target:8,  speed:6,  maxAtOnce:1 },
-  { id: 'w3-l10', world:3, order:10, mode:'balloons', title:'Z X C juntos', emoji:'🎈', subtitle:'Lado esquerdo completo embaixo.',             focusKeys:[],           pool:only(['z','x','c']),         target:12, speed:6,  maxAtOnce:2 },
-  { id: 'w3-l11', world:3, order:11, mode:'balloons', title:'Linha de baixo completa', emoji:'🎈', subtitle:'Z X C V B N M.',                     focusKeys:[],           pool:only(['z','x','c','v','b','n','m']), target:16, speed:6,  maxAtOnce:3 },
-  { id: 'w3-l12', world:3, order:12, mode:'pies',     title:'Bichos e bichinhos', emoji:'🐾', subtitle:'Nomes de animais.',                       focusKeys:[],           pool:ANIMAL_WORDS,                target:10, speed:9,  maxAtOnce:2 },
-  { id: 'w3-l13', world:3, order:13, mode:'balloons', title:'Revisão das três linhas', emoji:'🎈', subtitle:'Tudo misturado, devagarinho.',      focusKeys:[],           pool:only(['a','s','d','f','j','k','l','e','i','r','u','v','n','c','m']), target:20, speed:6,  maxAtOnce:2 },
-  { id: 'w3-l14', world:3, order:14, mode:'pies',     title:'Palavras mistas', emoji:'🥧', subtitle:'Tudo o que aprendeu.',                      focusKeys:[],           pool:[...SIMPLE_WORDS,...ANIMAL_WORDS],    target:10, speed:8,  maxAtOnce:2 },
-  { id: 'w3-l15', world:3, order:15, mode:'pies',     title:'Super desafio', emoji:'🏆', subtitle:'Tudo junto, mais rápido.',                    focusKeys:[],           pool:[...SIMPLE_WORDS,...ANIMAL_WORDS,...MEDIUM_WORDS], target:12, speed:8,  maxAtOnce:3 },
+  { id: 'w3-l1',  world:3, order:1,  mode:'balloons', title:'Descubra V', emoji:'🎈', subtitle:'Indicador esquerdo desce.',                      focusKeys:['v'],        pool:only(['v','f']),             target:10, speed:9,  maxAtOnce:1 },
+  { id: 'w3-l2',  world:3, order:2,  mode:'balloons', title:'Descubra N', emoji:'🎈', subtitle:'Indicador direito desce.',                       focusKeys:['n'],        pool:only(['n','j']),             target:10, speed:9,  maxAtOnce:1 },
+  { id: 'w3-l3',  world:3, order:3,  mode:'balloons', title:'V e N juntos', emoji:'🎈', subtitle:'Alternando.',                                  focusKeys:['v','n'],    pool:only(['v','n']),             target:16, speed:8,  maxAtOnce:1 },
+  { id: 'w3-l4',  world:3, order:4,  mode:'balloons', title:'Descubra B', emoji:'🎈', subtitle:'Indicador esquerdo estica baixo.',               focusKeys:['b'],        pool:only(['b','v','f']),         target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w3-l5',  world:3, order:5,  mode:'balloons', title:'Descubra M', emoji:'🎈', subtitle:'Indicador direito estica baixo.',                focusKeys:['m'],        pool:only(['m','n','j']),         target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w3-l6',  world:3, order:6,  mode:'balloons', title:'V B N M',   emoji:'🎈', subtitle:'Indicadores dominados.',                           focusKeys:[],           pool:only(['v','b','n','m']),     target:20, speed:7,  maxAtOnce:2 },
+  { id: 'w3-l7',  world:3, order:7,  mode:'balloons', title:'Descubra C', emoji:'🎈', subtitle:'Médio esquerdo desce.',                          focusKeys:['c'],        pool:only(['c','d']),             target:12, speed:8,  maxAtOnce:1 },
+  { id: 'w3-l8',  world:3, order:8,  mode:'balloons', title:'Descubra X', emoji:'🎈', subtitle:'Anelar esquerdo desce.',                         focusKeys:['x'],        pool:only(['x','s']),             target:12, speed:7,  maxAtOnce:1 },
+  { id: 'w3-l9',  world:3, order:9,  mode:'balloons', title:'Descubra Z', emoji:'🎈', subtitle:'Mindinho esquerdo desce.',                       focusKeys:['z'],        pool:only(['z','a']),             target:12, speed:7,  maxAtOnce:1 },
+  { id: 'w3-l10', world:3, order:10, mode:'balloons', title:'Z X C juntos', emoji:'🎈', subtitle:'Lado esquerdo completo embaixo.',             focusKeys:[],           pool:only(['z','x','c']),         target:18, speed:7,  maxAtOnce:2 },
+  { id: 'w3-l11', world:3, order:11, mode:'balloons', title:'Linha de baixo completa', emoji:'🎈', subtitle:'Z X C V B N M.',                     focusKeys:[],           pool:only(['z','x','c','v','b','n','m']), target:22, speed:7,  maxAtOnce:3 },
+  { id: 'w3-l12', world:3, order:12, mode:'pies',     title:'Bichos e bichinhos', emoji:'🐾', subtitle:'Nomes de animais (sem acento ainda).',   focusKeys:[],           pool:ANIMAL_WORDS_BASE,           target:12, speed:10, maxAtOnce:2 },
+  { id: 'w3-l13', world:3, order:13, mode:'balloons', title:'Revisão das três linhas', emoji:'🎈', subtitle:'Tudo misturado, devagarinho.',      focusKeys:[],           pool:only(['a','s','d','f','j','k','l','e','i','r','u','v','n','c','m']), target:24, speed:7,  maxAtOnce:2 },
+  { id: 'w3-l14', world:3, order:14, mode:'pies',     title:'Palavras mistas', emoji:'🥧', subtitle:'Tudo o que aprendeu — sem acentos.',         focusKeys:[],           pool:[...SIMPLE_WORDS_BASE,...ANIMAL_WORDS_BASE],    target:14, speed:9,  maxAtOnce:2 },
+  { id: 'w3-l15', world:3, order:15, mode:'pies',     title:'Super desafio', emoji:'🏆', subtitle:'Tudo junto, mais rápido.',                    focusKeys:[],           pool:[...SIMPLE_WORDS_BASE,...ANIMAL_WORDS_BASE,...MEDIUM_WORDS_BASE], target:14, speed:9,  maxAtOnce:3 },
 
   // ===== MUNDO 4 — POMAR DAS PALAVRAS =====
   { id: 'w4-l1',  world:4, order:1,  mode:'pies', title:'Frutaria',     emoji:'🍓', subtitle:'Frutas deliciosas!',                     focusKeys:[], pool:FRUIT_WORDS,     target:10, speed:11, maxAtOnce:2 },
