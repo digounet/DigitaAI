@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Fredoka', system-ui, sans-serif;
+  color-scheme: light;
+  color: #1f2937;
+  background: #bde7ff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+body {
+  background: linear-gradient(180deg, #7fd4ff 0%, #bde7ff 55%, #dff6c4 100%);
+  overflow-x: hidden;
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.finger-c1 { background: #ff7a7a; }
+.finger-c2 { background: #ffb86b; }
+.finger-c3 { background: #ffe066; }
+.finger-c4 { background: #7ed957; }
+.finger-c5 { background: #7fd4ff; }
+.finger-c6 { background: #a78bfa; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.clouds-bg {
+  background-image:
+    radial-gradient(closest-side at 20% 20%, #ffffff 0 40%, transparent 41%),
+    radial-gradient(closest-side at 70% 30%, #ffffff 0 35%, transparent 36%),
+    radial-gradient(closest-side at 40% 70%, #ffffff 0 35%, transparent 36%),
+    radial-gradient(closest-side at 85% 75%, #ffffff 0 30%, transparent 31%);
+  background-size: 320px 240px, 400px 220px, 360px 200px, 300px 220px;
+  background-position: 0 10%, 100% 0%, 20% 80%, 90% 90%;
+  background-repeat: repeat;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.grass-bg {
+  background: linear-gradient(180deg, transparent 0, #7ed957 20%, #5ca94a 100%);
+}
