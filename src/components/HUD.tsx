@@ -1,8 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useGame } from '../store/gameStore';
-import { setMuted } from '../audio/sfx';
-import { setMusicEnabled, setMusicSuppressed } from '../audio/music';
-import { useEffect } from 'react';
 
 type Props = {
   title?: string;
@@ -21,17 +18,6 @@ type Props = {
 
 export function HUD({ title, subtitle, progress, worldLabel, lessonLabel, worldEmoji, right, onPause }: Props) {
   const { soundOn, musicOn, toggleSound, toggleMusic, totalStars } = useGame();
-
-  useEffect(() => {
-    setMuted(!soundOn);
-    // Quando o som geral está mudo, pausamos a música; quando liga de novo e
-    // musicOn está ativo, volta.
-    setMusicSuppressed(!soundOn);
-  }, [soundOn]);
-
-  useEffect(() => {
-    setMusicEnabled(musicOn && soundOn);
-  }, [musicOn, soundOn]);
 
   return (
     <div className="fixed top-0 left-0 right-0 z-30">

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mascot } from '../components/Mascot';
+import { AuthBadge } from '../components/AuthBadge';
 import { WORLDS, getLevelsByWorld, LEVELS } from '../data/levels';
 import { useGame } from '../store/gameStore';
 import { useEffect, useMemo, useRef } from 'react';
@@ -131,6 +132,7 @@ export function Home() {
           >
             {soundOn ? '🔊' : '🔇'}
           </button>
+          <AuthBadge />
         </div>
 
         {!diagnosticDone && (

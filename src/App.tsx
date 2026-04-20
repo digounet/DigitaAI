@@ -3,9 +3,10 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Play } from './pages/Play';
 import { useLeaderboardSync } from './hooks/useLeaderboardSync';
+import { useUserProgressSync } from './hooks/useUserProgressSync';
 import { useGame } from './store/gameStore';
 import { setMuted } from './audio/sfx';
-import { setMusicEnabled, setMusicSuppressed } from './audio/music';
+import { setMusicEnabled } from './audio/music';
 import './App.css';
 
 const Diagnostic = lazy(() => import('./pages/Diagnostic').then((m) => ({ default: m.Diagnostic })));
@@ -15,21 +16,23 @@ const Loading = () => (
   <div className="flex-1 flex items-center justify-center text-lg text-gray-500">Carregando…</div>
 );
 
-/** Sincroniza os toggles da store com os players de áudio, globalmente. */
+/** Sincroniza os toggles da store com os players de áudio, globalmente.
+ *  🔊 soundOn → apenas efeitos sonoros (teclas, pop, fanfarra).
+ *  🎵 musicOn → apenas música de fundo. Totalmente independentes. */
 function useAudioSync() {
   const soundOn = useGame((s) => s.soundOn);
   const musicOn = useGame((s) => s.musicOn);
   useEffect(() => {
     setMuted(!soundOn);
-    setMusicSuppressed(!soundOn);
   }, [soundOn]);
   useEffect(() => {
-    setMusicEnabled(musicOn && soundOn);
-  }, [musicOn, soundOn]);
+    setMusicEnabled(musicOn);
+  }, [musicOn]);
 }
 
 function App() {
   useLeaderboardSync();
+  useUserProgressSync();
   useAudioSync();
 
   return (

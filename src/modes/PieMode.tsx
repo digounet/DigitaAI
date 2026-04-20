@@ -80,7 +80,8 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   useEffect(() => {
     if (finished || paused) return;
     const maxAtOnce = level.maxAtOnce ?? 2;
-    const every = Math.max(2000, (speed * 1000) / Math.max(1, maxAtOnce));
+    // Checa spawn rápido (700ms); aliveCount controla densidade.
+    const every = 700;
     const doSpawn = () => {
       if (finishedRef.current || pausedRef.current) return;
       const aliveCount = piesRef.current.filter((x) => !x.popped).length;

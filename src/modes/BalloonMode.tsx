@@ -73,7 +73,9 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
   useEffect(() => {
     if (finished || paused) return;
     const maxAtOnce = level.maxAtOnce ?? Math.min(3, 1 + Math.floor(level.target / 8));
-    const spawnEvery = Math.max(1500, (speed * 1000) / Math.max(1, maxAtOnce));
+    // Checa spawn a cada 500ms; a guarda `aliveCount >= maxAtOnce` controla a densidade.
+    // Sem isso, com maxAtOnce=1 o jogo ficava esperando `speed` segundos ociosos entre balões.
+    const spawnEvery = 500;
 
     const doSpawn = () => {
       if (finishedRef.current || pausedRef.current) return;

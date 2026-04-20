@@ -1,8 +1,15 @@
-// Inicialização do Firebase: app, auth (anônimo), Firestore.
-// As chaves Web do Firebase são públicas por design — a segurança
-// vem das Security Rules do Firestore + Authorized Domains.
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, type Auth, type User } from 'firebase/auth';
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged,
+  signInWithPopup,
+  linkWithPopup,
+  signOut as fbSignOut,
+  GoogleAuthProvider,
+  type Auth,
+  type User,
+} from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -19,7 +26,7 @@ export const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
 
-/** Garante que temos um UID anônimo. Resolve para o User autenticado. */
+/** Garante que exista um User autenticado. Faz login anônimo se necessário. */
 export function ensureAuth(): Promise<User> {
   return new Promise((resolve, reject) => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -33,4 +40,37 @@ export function ensureAuth(): Promise<User> {
       reject(err);
     });
   });
+}
+
+/**
+ * Login com Google. Se o usuário atual é anônimo, tenta *linkar* a conta
+ * (preserva UID e progresso). Se o Google já estava linkado a outro UID,
+ * cai de volta pro `signInWithPopup` (troca de conta).
+ */
+export async function signInWithGoogle(): Promise<User> {
+  const provider = new GoogleAuthProvider();
+  const current = auth.currentUser;
+  if (current && current.isAnonymous) {
+    try {
+      const cred = await linkWithPopup(current, provider);
+      return cred.user;
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') {
+        // Já existe conta Google com esse e-mail — só fazer signIn normal.
+        await fbSignOut(auth);
+        const cred = await signInWithPopup(auth, provider);
+        return cred.user;
+      }
+      throw err;
+    }
+  }
+  const cred = await signInWithPopup(auth, provider);
+  return cred.user;
+}
+
+/** Faz logout e imediatamente cria uma nova sessão anônima pra o jogo continuar. */
+export async function signOut(): Promise<void> {
+  await fbSignOut(auth);
+  await signInAnonymously(auth);
 }

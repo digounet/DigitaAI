@@ -8,12 +8,17 @@ type Options = {
 
 /**
  * Captura digitação via <input> invisível + evento `input`,
- * suportando caracteres compostos com dead keys (ã, ñ, é) em
- * teclados US onde o usuário pressiona Option+N + A, Option+E + A etc.
+ * suportando caracteres compostos com dead keys (ã, ç, é) em
+ * teclados US/US-Internacional onde o usuário pressiona:
+ *   - Option+N + A  → ã
+ *   - Option+C      → ç
+ *   - ' + c         → ç  (US Internacional)
  *
- * Esses caracteres NÃO vêm no `keydown` (que só vê a última tecla base),
- * então qualquer jogo que fica ouvindo `window.addEventListener('keydown')`
- * precisa migrar pra essa abordagem pra aceitar acentuação correta.
+ * IMPORTANTE: durante a composição (dead key até confirmar), o navegador
+ * dispara eventos `input` com caracteres intermediários (o próprio acento).
+ * Ignoramos enquanto `isComposing` está ativo e processamos o caractere
+ * final SOMENTE no `compositionend`. Sem isso, a precisão despenca porque
+ * o acento cru é contado como tecla errada.
  */
 export function useTypingInput(opts: Options) {
   const optsRef = useRef(opts);
@@ -24,8 +29,7 @@ export function useTypingInput(opts: Options) {
     inputRef.current?.focus();
   }, []);
 
-  // Garante que o input recupera o foco se for perdido (ex: depois de clicar
-  // num botão do overlay). Polling leve — simples e robusto.
+  // Refocus se o input perder foco (útil depois de clicar em botões modais).
   useEffect(() => {
     const tick = () => {
       const el = inputRef.current;
@@ -38,27 +42,41 @@ export function useTypingInput(opts: Options) {
     return () => window.clearInterval(id);
   }, []);
 
+  const drain = (el: HTMLInputElement) => {
+    const val = el.value;
+    if (val) {
+      for (const ch of val) optsRef.current.onChar(ch);
+      el.value = '';
+    }
+  };
+
   const inputEl = (
     <input
       ref={inputRef}
       onInput={(e) => {
-        const target = e.currentTarget;
-        const val = target.value;
-        if (val) {
-          for (const ch of val) optsRef.current.onChar(ch);
-          target.value = '';
-        }
+        // InputEvent.isComposing = true durante dead key. Ignoramos nesses
+        // instantes — processaremos no compositionend.
+        const ie = e.nativeEvent as InputEvent;
+        if (ie.isComposing) return;
+        drain(e.currentTarget);
+      }}
+      onCompositionEnd={(e) => {
+        // `e.data` traz o caractere final resolvido (ã, ç...). Preferimos
+        // `drain(input)` pra ler o value atual — mais robusto entre browsers.
+        drain(e.currentTarget as HTMLInputElement);
       }}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.preventDefault();
           optsRef.current.onEscape?.();
         } else if (e.key === 'Backspace') {
+          // Também ignoramos backspace dentro de composição — não é "apagar
+          // o que já digitou", é o navegador cancelando o dead key.
+          if ((e.nativeEvent as KeyboardEvent).isComposing) return;
           optsRef.current.onBackspace?.();
         }
       }}
       onBlur={() => {
-        // Refoca no próximo frame — depois do click handler do botão.
         requestAnimationFrame(() => inputRef.current?.focus());
       }}
       className="fixed -left-[9999px] top-0 w-0 h-0 opacity-0 pointer-events-none"
