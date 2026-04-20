@@ -30,8 +30,8 @@ export function Home() {
           transition={{ type: 'spring', stiffness: 200, damping: 12 }}
           className="inline-block text-5xl md:text-7xl font-bold"
         >
-          <span className="text-candy">Digita</span>
-          <span className="text-grape">Aí!</span>
+          <span className="text-candy">Digit</span>
+          <span className="text-grape">AI</span>
           <span className="ml-2">🎈</span>
         </motion.h1>
         <p className="mt-1 text-gray-700 text-lg">Aprender a digitar brincando</p>
