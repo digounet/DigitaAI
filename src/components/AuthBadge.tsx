@@ -37,8 +37,26 @@ export function AuthBadge() {
       const { signInWithGoogle } = await import('../firebase');
       await signInWithGoogle();
     } catch (err) {
-      console.error(err);
-      setError('Não deu pra entrar. Tente de novo.');
+      console.error('[auth] login falhou:', err);
+      const e = err as { code?: string; message?: string };
+      const code = e.code ?? '';
+      const friendly =
+        code === 'auth/popup-blocked'
+          ? 'O navegador bloqueou o popup. Permita popups para este site.'
+          : code === 'auth/popup-closed-by-user'
+          ? 'Você fechou a janela antes de confirmar. Tente de novo.'
+          : code === 'auth/cancelled-popup-request'
+          ? 'Outra tela de login foi aberta. Tente novamente.'
+          : code === 'auth/unauthorized-domain'
+          ? 'Domínio não autorizado no Firebase. Adicione-o em Auth → Settings → Authorized domains.'
+          : code === 'auth/operation-not-allowed'
+          ? 'Google Sign-In não está habilitado. Ative em Firebase → Authentication → Sign-in method → Google.'
+          : code === 'auth/network-request-failed'
+          ? 'Falha de rede. Verifique sua conexão.'
+          : code === 'auth/internal-error'
+          ? 'Erro interno do Firebase. Verifique restrições da API Key no GCP.'
+          : `${code || 'erro'} — ${e.message ?? 'tente novamente'}`;
+      setError(friendly);
     } finally {
       setBusy(false);
     }
@@ -67,7 +85,7 @@ export function AuthBadge() {
           <GoogleIcon />
           {busy ? 'Entrando...' : 'Entrar com Google'}
         </button>
-        {error && <div className="text-xs text-coral">{error}</div>}
+        {error && <div className="text-xs text-coral max-w-[260px] text-center leading-tight">{error}</div>}
       </div>
     );
   }

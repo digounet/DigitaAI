@@ -43,16 +43,19 @@ export async function upsertMyScore(params: {
   }
 }
 
-/** Busca top N ordenado por estrelas (desc) e depois por bestWpm (desc). */
+/**
+ * Busca top N ordenado por estrelas (desc) e desempata por bestWpm no cliente.
+ * Buscamos um pouco mais do que `n` (*3) pra ter margem pra ordenar o desempate
+ * sem precisar de índice composto no Firestore.
+ */
 export async function fetchTop(n = 20): Promise<LeaderboardEntry[]> {
   const q = query(
     collection(db, 'leaderboard'),
     orderBy('totalStars', 'desc'),
-    orderBy('bestWpm', 'desc'),
-    limit(n)
+    limit(n * 3)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => {
+  const rows = snap.docs.map((d) => {
     const data = d.data();
     const updatedAt = data.updatedAt?.toDate?.() as Date | undefined;
     return {
@@ -61,6 +64,9 @@ export async function fetchTop(n = 20): Promise<LeaderboardEntry[]> {
       totalStars: data.totalStars as number,
       bestWpm: data.bestWpm as number,
       updatedAt,
-    };
+    } as LeaderboardEntry;
   });
+  // Desempate: dentro do mesmo totalStars, quem tem bestWpm maior vem primeiro.
+  rows.sort((a, b) => b.totalStars - a.totalStars || b.bestWpm - a.bestWpm);
+  return rows.slice(0, n);
 }
