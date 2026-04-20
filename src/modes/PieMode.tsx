@@ -7,11 +7,12 @@ import { ResultModal } from '../components/ResultModal';
 import { Mascot } from '../components/Mascot';
 import { PauseOverlay } from '../components/PauseOverlay';
 import type { Level } from '../data/levels';
-import { getLessonPosition, getWorldMeta } from '../data/levels';
+import { getLessonPosition, getWorldMeta, levelHasDigits } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
-import { useGame, DIFFICULTY_SPEED_MULTIPLIER } from '../store/gameStore';
+import { useGame, DIFFICULTY_SPEED_MULTIPLIER, effectiveMaxAtOnce } from '../store/gameStore';
+import { pickSpawnX } from '../utils/spawnX';
 
 function baseKey(ch: string): string {
   return ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -107,16 +108,19 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
 
   useEffect(() => {
     if (finished || paused) return;
-    const maxAtOnce = level.maxAtOnce ?? 2;
+    const baseMax = level.maxAtOnce ?? 2;
+    const maxAtOnce = effectiveMaxAtOnce(baseMax, difficulty);
     // Checa spawn rápido (700ms); aliveCount controla densidade.
     const every = 700;
+    // Tortas são mais largas que balões: exige mais espaçamento horizontal.
+    const MIN_DIST = 38;
     const doSpawn = () => {
       if (finishedRef.current || pausedRef.current) return;
-      const aliveCount = piesRef.current.filter((x) => !x.popped).length;
-      if (aliveCount >= maxAtOnce) return;
+      const alive = piesRef.current.filter((x) => !x.popped);
+      if (alive.length >= maxAtOnce) return;
       const nid = ++nextIdRef.current;
       const word = level.pool[Math.floor(Math.random() * level.pool.length)];
-      const x = 5 + Math.random() * 80;
+      const x = pickSpawnX(alive.map((p) => p.x), { minDist: MIN_DIST, range: [5, 85] });
       setPies((b) => [
         ...b,
         {
@@ -133,7 +137,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
     doSpawn();
     const id = setInterval(doSpawn, every);
     return () => clearInterval(id);
-  }, [finished, paused, speed, level.pool, level.maxAtOnce]);
+  }, [finished, paused, speed, level.pool, level.maxAtOnce, difficulty]);
 
   useEffect(() => {
     // Limpa tortinhas na pausa OU no final da lição.
@@ -276,7 +280,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
       </div>
 
       <div className="absolute bottom-3 left-0 right-0 px-2">
-        <Keyboard highlight={nextLetter ? baseKey(nextLetter) : undefined} lastPressed={lastKey} compact />
+        <Keyboard highlight={nextLetter ? baseKey(nextLetter) : undefined} lastPressed={lastKey} compact showNumbers={levelHasDigits(level)} />
       </div>
 
       {inputEl}

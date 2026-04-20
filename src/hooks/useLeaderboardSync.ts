@@ -10,7 +10,9 @@ import { useGame } from '../store/gameStore';
  */
 export function useLeaderboardSync() {
   const playerName = useGame((s) => s.playerName);
-  const scores = useGame((s) => s.scores);
+  // Leaderboard usa só o slot `normal` pra evitar que jogar em fácil infle a
+  // pontuação (easy dá estrelinha mais fácil). Ranking segue a progressão base.
+  const scores = useGame((s) => s.allProgress.normal.scores);
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const timerRef = useRef<number | null>(null);

@@ -1,9 +1,12 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db, getCurrentUser } from '../firebase';
-import type { LevelScore } from '../store/gameStore';
+import type { Difficulty, LevelScore, ProgressSlot } from '../store/gameStore';
 
 export type ProgressDoc = {
   playerName?: string;
+  /** Progresso completo por dificuldade (formato atual). */
+  allProgress?: Partial<Record<Difficulty, ProgressSlot>>;
+  /** Campos legados — mantidos pra compat com docs antigos; espelham o slot `normal`. */
   scores?: Record<string, LevelScore>;
   diagnosticDone?: boolean;
   recommendedLevelId?: string | null;

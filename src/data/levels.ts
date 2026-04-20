@@ -484,6 +484,12 @@ export function getNextLevel(current: Level): Level | undefined {
   return LEVELS[idx + 1];
 }
 
+/** True se o nível envolve digitar dígitos (0-9) — no pool ou focusKeys. */
+export function levelHasDigits(level: Level): boolean {
+  if (level.focusKeys.some((k) => /\d/.test(k))) return true;
+  return level.pool.some((item) => /\d/.test(item));
+}
+
 export function getPrevLevelId(current: Level): string | undefined {
   const idx = LEVELS.findIndex((l) => l.id === current.id);
   return idx > 0 ? LEVELS[idx - 1].id : undefined;

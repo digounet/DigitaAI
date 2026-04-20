@@ -127,6 +127,22 @@ export function useTypingInput(opts: Options) {
         if (e.key === 'Backspace') {
           if ((e.nativeEvent as KeyboardEvent).isComposing) return;
           optsRef.current.onBackspace?.();
+          return;
+        }
+        // Espaço: alguns combos de teclado (IME PT-BR, autocomplete de mobile,
+        // corretor) engolem o espaço no pipeline do onInput do input escondido.
+        // Tratamos explicitamente no keydown e impedimos o default pra garantir
+        // que chegue no onChar. Espaço nunca faz parte de composição dead-key.
+        if (e.key === ' ') {
+          if ((e.nativeEvent as KeyboardEvent).isComposing) return;
+          e.preventDefault();
+          // Drena texto pendente (ex: "l" ainda não processado) antes do espaço.
+          const el = e.currentTarget;
+          if (el.value) {
+            for (const ch of el.value) optsRef.current.onChar(ch);
+            el.value = '';
+          }
+          optsRef.current.onChar(' ');
         }
       }}
       onKeyUp={() => {

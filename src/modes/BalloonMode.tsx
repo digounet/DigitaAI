@@ -7,11 +7,12 @@ import { ResultModal } from '../components/ResultModal';
 import { Mascot } from '../components/Mascot';
 import { PauseOverlay } from '../components/PauseOverlay';
 import type { Level } from '../data/levels';
-import { getLessonPosition, getWorldMeta } from '../data/levels';
+import { getLessonPosition, getWorldMeta, levelHasDigits } from '../data/levels';
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
-import { useGame, DIFFICULTY_SPEED_MULTIPLIER } from '../store/gameStore';
+import { useGame, DIFFICULTY_SPEED_MULTIPLIER, effectiveMaxAtOnce } from '../store/gameStore';
+import { pickSpawnX } from '../utils/spawnX';
 
 /** Normaliza para exibição no teclado virtual (ã → a). */
 function baseKey(ch: string): string {
@@ -108,15 +109,18 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
   // spawn periódico — depende só do nível, não de balloons state (usa ref).
   useEffect(() => {
     if (finished || paused) return;
-    const maxAtOnce = level.maxAtOnce ?? Math.min(3, 1 + Math.floor(level.target / 8));
+    const baseMax = level.maxAtOnce ?? Math.min(3, 1 + Math.floor(level.target / 8));
+    const maxAtOnce = effectiveMaxAtOnce(baseMax, difficulty);
     // Checa spawn a cada 500ms; a guarda `aliveCount >= maxAtOnce` controla a densidade.
     // Sem isso, com maxAtOnce=1 o jogo ficava esperando `speed` segundos ociosos entre balões.
     const spawnEvery = 500;
+    // Balões são mais finos que tortas: espaçamento menor que o do PieMode.
+    const MIN_DIST = 28;
 
     const doSpawn = () => {
       if (finishedRef.current || pausedRef.current) return;
-      const aliveCount = balloonsRef.current.filter((x) => !x.popped).length;
-      if (aliveCount >= maxAtOnce) return;
+      const alive = balloonsRef.current.filter((x) => !x.popped);
+      if (alive.length >= maxAtOnce) return;
       const nid = ++nextIdRef.current;
       // Lições "Descubra X" usam `sequence` pra alternar tecla-guia ↔ letra
       // nova em ordem (F, T, F, T...) em vez de sortear aleatoriamente. O
@@ -124,7 +128,7 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       const letter = level.sequence
         ? level.pool[(nid - 1) % level.pool.length]
         : level.pool[Math.floor(Math.random() * level.pool.length)];
-      const x = 5 + Math.random() * 85;
+      const x = pickSpawnX(alive.map((b) => b.x), { minDist: MIN_DIST, range: [5, 90] });
       setBalloons((b) => [
         ...b,
         {
@@ -141,7 +145,7 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
     doSpawn();
     const id = setInterval(doSpawn, spawnEvery);
     return () => clearInterval(id);
-  }, [finished, paused, speed, level.target, level.pool, level.maxAtOnce, level.sequence]);
+  }, [finished, paused, speed, level.target, level.pool, level.maxAtOnce, level.sequence, difficulty]);
 
   // Ao pausar ou finalizar, limpa balões pendentes pra não continuarem subindo
   // atrás do overlay/modal (e evita que eles contem como erro na métrica final).
@@ -255,7 +259,7 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       </div>
 
       <div className="absolute bottom-3 left-0 right-0 px-2">
-        <Keyboard highlight={nextTargetLetter ? baseKey(nextTargetLetter) : undefined} lastPressed={lastKey} compact />
+        <Keyboard highlight={nextTargetLetter ? baseKey(nextTargetLetter) : undefined} lastPressed={lastKey} compact showNumbers={levelHasDigits(level)} />
       </div>
 
       {inputEl}
