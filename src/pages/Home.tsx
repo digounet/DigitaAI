@@ -370,7 +370,7 @@ export function Home() {
       <footer className="fixed bottom-0 left-0 right-0 z-10 pointer-events-none">
         <div className="h-16 grass-bg relative">
           <div className="absolute inset-x-0 bottom-1 text-center text-[11px] text-white/90 font-semibold drop-shadow">
-            © {new Date().getFullYear()} DigitAI · Aprender a digitar brincando
+            © {new Date().getFullYear()} DigitAI · Pablo Rodrigo · Aprender a digitar brincando
           </div>
         </div>
       </footer>
