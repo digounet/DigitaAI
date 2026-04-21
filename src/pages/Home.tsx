@@ -129,6 +129,7 @@ export function Home() {
         </motion.h1>
         <p className="mt-1 text-gray-700 text-lg">Aprender a digitar brincando</p>
 
+        {/* Linha 1 — Progresso (informativo) */}
         <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
           <div className="bg-white/85 rounded-full px-4 py-2 shadow-pop flex items-center gap-2">
             <span className="text-xl">⭐</span>
@@ -140,6 +141,10 @@ export function Home() {
             <b className="text-lg">{globalStats.completed}</b>
             <span className="text-gray-500 text-sm">/{globalStats.total} lições</span>
           </div>
+        </div>
+
+        {/* Linha 2 — Identidade */}
+        <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
           <input
             type="text"
             value={playerName}
@@ -147,6 +152,11 @@ export function Home() {
             placeholder="Seu nome"
             className="bg-white/85 rounded-full px-4 py-2 shadow-pop outline-none focus:ring-4 focus:ring-candy/40 text-center"
           />
+          <AuthBadge />
+        </div>
+
+        {/* Linha 3 — Navegação principal (CTAs) */}
+        <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
           <Link
             to="/test"
             className="bg-white/85 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
@@ -171,11 +181,15 @@ export function Home() {
           >
             ❤️ Apoiar
           </button>
+        </div>
+
+        {/* Linha 4 — Preferências (secundário, visualmente mais leve) */}
+        <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
           <div
             role="radiogroup"
             aria-label="Dificuldade"
             title="Velocidade dos desafios"
-            className="bg-white/85 rounded-full shadow-pop flex items-center p-1 gap-1"
+            className="bg-white/70 rounded-full shadow-pop flex items-center p-1 gap-1"
           >
             {([
               { key: 'easy', emoji: '🐢', label: 'Fácil' },
@@ -205,7 +219,7 @@ export function Home() {
             title="Música"
             aria-label={musicOn ? 'Desligar música' : 'Ligar música'}
             className={`h-10 w-10 rounded-full shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition ${
-              musicOn ? 'bg-mint' : 'bg-white text-gray-400'
+              musicOn ? 'bg-mint' : 'bg-white/70 text-gray-400'
             }`}
           >
             🎵
@@ -214,11 +228,10 @@ export function Home() {
             onClick={toggleSound}
             title="Efeitos sonoros"
             aria-label={soundOn ? 'Desligar som' : 'Ligar som'}
-            className="h-10 w-10 rounded-full bg-white shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition"
+            className="h-10 w-10 rounded-full bg-white/70 shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition"
           >
             {soundOn ? '🔊' : '🔇'}
           </button>
-          <AuthBadge />
         </div>
 
         {!diagnosticDone && (
