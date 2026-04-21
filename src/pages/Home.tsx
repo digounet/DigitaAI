@@ -44,6 +44,29 @@ export function Home() {
   }, []);
 
   const [donationOpen, setDonationOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement | null>(null);
+
+  // Fecha o popover de ajustes ao clicar fora ou pressionar Esc.
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSettingsOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [settingsOpen]);
 
   const recommendedLevel = recommendedLevelId ? LEVELS.find((l) => l.id === recommendedLevelId) : null;
 
@@ -117,6 +140,94 @@ export function Home() {
       <div className="absolute inset-0 clouds-bg pointer-events-none" />
 
       <header className="relative z-10 pt-6 pb-2 px-4 text-center">
+        {/* Canto superior esquerdo — Ajustes (popover) */}
+        <div ref={settingsRef} className="absolute top-4 left-4 z-20">
+          <button
+            onClick={() => setSettingsOpen((o) => !o)}
+            aria-haspopup="dialog"
+            aria-expanded={settingsOpen}
+            aria-label="Ajustes"
+            title="Ajustes"
+            className="h-10 w-10 rounded-full bg-white/85 shadow-pop flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition"
+          >
+            ⚙️
+          </button>
+          {settingsOpen && (
+            <motion.div
+              role="dialog"
+              aria-label="Ajustes"
+              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.12 }}
+              className="absolute top-12 left-0 z-30 bg-white rounded-2xl shadow-bubbly p-4 w-64 text-left"
+            >
+              <div>
+                <div className="text-xs font-bold text-gray-500 mb-1.5 px-1 uppercase tracking-wide">
+                  Dificuldade
+                </div>
+                <div
+                  role="radiogroup"
+                  aria-label="Dificuldade"
+                  className="flex bg-gray-100 rounded-full p-1 gap-1"
+                >
+                  {([
+                    { key: 'easy', emoji: '🐢', label: 'Fácil' },
+                    { key: 'normal', emoji: '🐰', label: 'Normal' },
+                    { key: 'hard', emoji: '🚀', label: 'Rápido' },
+                  ] as const).map((opt) => {
+                    const active = difficulty === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setDifficulty(opt.key)}
+                        className={`flex-1 px-2 py-1.5 rounded-full text-xs font-bold transition ${
+                          active ? 'bg-candy text-white shadow-pop' : 'text-gray-600 hover:bg-white'
+                        }`}
+                      >
+                        <span className="mr-1">{opt.emoji}</span>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className="text-xs font-bold text-gray-500 mb-1.5 px-1 uppercase tracking-wide">
+                  Áudio
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={toggleMusic}
+                    aria-pressed={musicOn}
+                    className={`flex-1 rounded-full py-2 text-sm font-bold flex items-center justify-center gap-1.5 transition ${
+                      musicOn ? 'bg-mint' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    🎵 <span>{musicOn ? 'Música on' : 'Música off'}</span>
+                  </button>
+                  <button
+                    onClick={toggleSound}
+                    aria-pressed={soundOn}
+                    className={`flex-1 rounded-full py-2 text-sm font-bold flex items-center justify-center gap-1.5 transition ${
+                      soundOn ? 'bg-sun' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {soundOn ? '🔊' : '🔇'} <span>{soundOn ? 'Som on' : 'Som off'}</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Canto superior direito — Conta */}
+        <div className="absolute top-4 right-4 z-20">
+          <AuthBadge />
+        </div>
+
         <motion.h1
           initial={{ scale: 0.6, opacity: 0, rotate: -6 }}
           animate={{ scale: 1, opacity: 1, rotate: -2 }}
@@ -129,7 +240,7 @@ export function Home() {
         </motion.h1>
         <p className="mt-1 text-gray-700 text-lg">Aprender a digitar brincando</p>
 
-        {/* Linha 1 — Progresso (informativo) */}
+        {/* Linha 1 — Progresso */}
         <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
           <div className="bg-white/85 rounded-full px-4 py-2 shadow-pop flex items-center gap-2">
             <span className="text-xl">⭐</span>
@@ -143,8 +254,8 @@ export function Home() {
           </div>
         </div>
 
-        {/* Linha 2 — Identidade */}
-        <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
+        {/* Linha 2 — Nome do jogador */}
+        <div className="mt-3 flex items-center justify-center">
           <input
             type="text"
             value={playerName}
@@ -152,17 +263,21 @@ export function Home() {
             placeholder="Seu nome"
             className="bg-white/85 rounded-full px-4 py-2 shadow-pop outline-none focus:ring-4 focus:ring-candy/40 text-center"
           />
-          <AuthBadge />
         </div>
 
-        {/* Linha 3 — Navegação principal (CTAs) */}
+        {/* Linha 3 — Navegação principal.
+            "Teste" só aparece aqui depois do diagnóstico; enquanto não foi
+            feito, o banner logo abaixo já cumpre essa CTA com muito mais
+            destaque. */}
         <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
-          <Link
-            to="/test"
-            className="bg-white/85 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
-          >
-            🎯 Teste de nivelamento
-          </Link>
+          {diagnosticDone && (
+            <Link
+              to="/test"
+              className="bg-white/85 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
+            >
+              🎯 Refazer teste
+            </Link>
+          )}
           <Link
             to="/ranking"
             className="bg-white/85 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
@@ -180,57 +295,6 @@ export function Home() {
             className="bg-coral/90 text-white rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
           >
             ❤️ Apoiar
-          </button>
-        </div>
-
-        {/* Linha 4 — Preferências (secundário, visualmente mais leve) */}
-        <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
-          <div
-            role="radiogroup"
-            aria-label="Dificuldade"
-            title="Velocidade dos desafios"
-            className="bg-white/70 rounded-full shadow-pop flex items-center p-1 gap-1"
-          >
-            {([
-              { key: 'easy', emoji: '🐢', label: 'Fácil' },
-              { key: 'normal', emoji: '🐰', label: 'Normal' },
-              { key: 'hard', emoji: '🚀', label: 'Rápido' },
-            ] as const).map((opt) => {
-              const active = difficulty === opt.key;
-              return (
-                <button
-                  key={opt.key}
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() => setDifficulty(opt.key)}
-                  title={`${opt.label} — ${opt.key === 'easy' ? 'mais tempo pra digitar' : opt.key === 'hard' ? 'menos tempo, mais desafio' : 'velocidade padrão'}`}
-                  className={`px-3 py-1 rounded-full text-sm font-bold transition ${
-                    active ? 'bg-candy text-white shadow-pop' : 'text-gray-600 hover:bg-white'
-                  }`}
-                >
-                  <span className="mr-1">{opt.emoji}</span>
-                  <span className="hidden sm:inline">{opt.label}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button
-            onClick={toggleMusic}
-            title="Música"
-            aria-label={musicOn ? 'Desligar música' : 'Ligar música'}
-            className={`h-10 w-10 rounded-full shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition ${
-              musicOn ? 'bg-mint' : 'bg-white/70 text-gray-400'
-            }`}
-          >
-            🎵
-          </button>
-          <button
-            onClick={toggleSound}
-            title="Efeitos sonoros"
-            aria-label={soundOn ? 'Desligar som' : 'Ligar som'}
-            className="h-10 w-10 rounded-full bg-white/70 shadow-pop flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition"
-          >
-            {soundOn ? '🔊' : '🔇'}
           </button>
         </div>
 

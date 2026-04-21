@@ -76,16 +76,17 @@ export function AuthBadge() {
 
   if (isAnonymous) {
     return (
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-end gap-1">
         <button
           onClick={handleLogin}
           disabled={busy}
-          className="bg-white rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm flex items-center gap-2 border border-gray-200 disabled:opacity-60"
+          aria-label="Entrar com Google"
+          className="bg-white rounded-full h-10 sm:h-auto w-10 sm:w-auto sm:px-4 sm:py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm flex items-center justify-center sm:gap-2 border border-gray-200 disabled:opacity-60"
         >
           <GoogleIcon />
-          {busy ? 'Entrando...' : 'Entrar com Google'}
+          <span className="hidden sm:inline">{busy ? 'Entrando...' : 'Entrar com Google'}</span>
         </button>
-        {error && <div className="text-xs text-coral max-w-[260px] text-center leading-tight">{error}</div>}
+        {error && <div className="text-xs text-coral max-w-[220px] text-right leading-tight">{error}</div>}
       </div>
     );
   }
