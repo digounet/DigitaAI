@@ -138,7 +138,11 @@ function Eyes({ mood }: { mood: Mood }) {
       </g>
     );
   }
-  // happy / wave — olhos grandes kawaii
+  // happy / wave — olhos grandes kawaii com piscadinhas frequentes
+  // Padrão: piscada longa ~45%, piscada dupla rápida ~92%, ciclo de 4.2s.
+  // Resultado: coruja pisca 3x a cada ~4s, com um blink duplo "fofinho".
+  const blinkKeyframes = [8.5, 8.5, 0.4, 8.5, 8.5, 8.5, 0.4, 8.5, 0.4, 8.5];
+  const blinkTimes = [0, 0.42, 0.46, 0.5, 0.88, 0.9, 0.92, 0.94, 0.96, 1];
   return (
     <g>
       <circle cx="32" cy="50" r="11" fill="#ffffff" />
@@ -148,16 +152,16 @@ function Eyes({ mood }: { mood: Mood }) {
         cy={50}
         r={8.5}
         fill="url(#owl-eye)"
-        animate={{ ry: [8.5, 8.5, 0.5, 8.5] }}
-        transition={{ repeat: Infinity, duration: 5, times: [0, 0.93, 0.96, 1] }}
+        animate={{ ry: blinkKeyframes }}
+        transition={{ repeat: Infinity, duration: 4.2, times: blinkTimes, ease: 'easeInOut' }}
       />
       <motion.circle
         cx={68}
         cy={50}
         r={8.5}
         fill="url(#owl-eye)"
-        animate={{ ry: [8.5, 8.5, 0.5, 8.5] }}
-        transition={{ repeat: Infinity, duration: 5, times: [0, 0.93, 0.96, 1] }}
+        animate={{ ry: blinkKeyframes }}
+        transition={{ repeat: Infinity, duration: 4.2, times: blinkTimes, ease: 'easeInOut' }}
       />
       <circle cx="35" cy="46" r="3" fill="#ffffff" />
       <circle cx="71" cy="46" r="3" fill="#ffffff" />

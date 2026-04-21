@@ -279,6 +279,7 @@ export const LEVELS: Level[] = [
   { id: 'w3-l13', world:3, order:13, mode:'balloons', title:'Revisão das três linhas', emoji:'🎈', subtitle:'Tudo misturado, devagarinho.',      focusKeys:[],           pool:only(['a','s','d','f','j','k','l','e','i','r','u','v','n','c','m']), target:24, speed:7,  maxAtOnce:2 },
   { id: 'w3-l14', world:3, order:14, mode:'pies',     title:'Palavras mistas', emoji:'🥧', subtitle:'Tudo o que aprendeu — sem acentos.',         focusKeys:[],           pool:[...SIMPLE_WORDS_BASE,...ANIMAL_WORDS_BASE],    target:14, speed:9,  maxAtOnce:2 },
   { id: 'w3-l15', world:3, order:15, mode:'pies',     title:'Super desafio', emoji:'🏆', subtitle:'Tudo junto, mais rápido.',                    focusKeys:[],           pool:[...SIMPLE_WORDS_BASE,...ANIMAL_WORDS_BASE,...MEDIUM_WORDS_BASE], target:14, speed:9,  maxAtOnce:3 },
+  { id: 'w3-l16', world:3, order:16, mode:'climb',    title:'Escalada da aventura', emoji:'🧗', subtitle:'Suba as nuvens com palavras simples!',    focusKeys:[], pool:[...SIMPLE_WORDS_BASE,...ANIMAL_WORDS_BASE], target:10 },
 
   // ===== MUNDO 4 — POMAR DAS PALAVRAS =====
   { id: 'w4-l1',  world:4, order:1,  mode:'pies', title:'Frutaria',     emoji:'🍓', subtitle:'Frutas deliciosas!',                     focusKeys:[], pool:FRUIT_WORDS,     target:10, speed:11, maxAtOnce:2 },
@@ -295,7 +296,7 @@ export const LEVELS: Level[] = [
   { id: 'w4-l12', world:4, order:12, mode:'pies', title:'Esportes',     emoji:'⚽', subtitle:'Movimente-se!',                            focusKeys:[], pool:SPORT_WORDS,     target:10, speed:10, maxAtOnce:2 },
   { id: 'w4-l13', world:4, order:13, mode:'pies', title:'Profissões',   emoji:'👩‍🚀', subtitle:'O que quer ser?',                        focusKeys:[], pool:JOB_WORDS,       target:10, speed:10, maxAtOnce:2 },
   { id: 'w4-l14', world:4, order:14, mode:'pies', title:'Aventura',     emoji:'🚀', subtitle:'Palavras maiores.',                        focusKeys:[], pool:MEDIUM_WORDS,    target:12, speed:10, maxAtOnce:3 },
-  { id: 'w4-l15', world:4, order:15, mode:'pies',  title:'Gigantes',     emoji:'🦕', subtitle:'Palavras compridas.',                      focusKeys:[], pool:BIG_WORDS,       target:10, speed:10, maxAtOnce:2 },
+  { id: 'w4-l15', world:4, order:15, mode:'pies',  title:'Gigantes',     emoji:'🦕', subtitle:'Palavras compridas.',                      focusKeys:[], pool:BIG_WORDS,       target:10, speed:13, maxAtOnce:2 },
   { id: 'w4-l16', world:4, order:16, mode:'climb', title:'Escalada das frutas', emoji:'🧗', subtitle:'Suba as nuvens digitando palavras certinho!', focusKeys:[], pool:[...FRUIT_WORDS,...SIMPLE_WORDS], target:10 },
 
   // ===== MUNDO 5 — JARDIM DAS FRASES =====
@@ -361,6 +362,7 @@ export const LEVELS: Level[] = [
   { id: 'w9-l6',  world:9, order:6,  mode:'pies',     title:'Tudo com acento', emoji:'🎨', subtitle:'Misturando todos os acentos.',           focusKeys:[], pool:['coração','manhã','pêssego','açúcar','família','óculos','história','médico','ônibus','máquina'], target:12, speed:11, maxAtOnce:2 },
   { id: 'w9-l7',  world:9, order:7,  mode:'sentence', title:'Frases acentuadas',emoji:'💬', subtitle:'Pratique em contexto.',                focusKeys:[], pool:['o pé do avô é grande','a mamãe fez coração de papel','o leão é o rei da savana','pêssego é uma fruta doce','três crianças brincam no pátio'], target:5, goalWpm:18 },
   { id: 'w9-l8',  world:9, order:8,  mode:'sentence', title:'Palavras difíceis',emoji:'✨', subtitle:'Acentos + pontuação.',                  focusKeys:[], pool:['minha avó cozinha açúcar queimado','o ônibus já passou às sete','o médico é muito atencioso','três pássaros pousaram no galho','família é amor à primeira vista'], target:5, goalWpm:20 },
+  { id: 'w9-l9',  world:9, order:9,  mode:'climb',    title:'Escalada com acentos', emoji:'🧗', subtitle:'Palavras acentuadas, nuvem a nuvem.', focusKeys:[], pool:['café','pé','fé','avó','vovô','mãe','pão','coração','manhã','três','médico','ônibus','bíblia','família'], target:10 },
 
   // ===== MUNDO 10 — PRAÇA DOS DÍGRAFOS =====
   { id: 'w10-l1', world:10, order:1, mode:'pies', title:'CH',  emoji:'🔤', subtitle:'ch como em chave.',                focusKeys:[], pool:['chave','chuva','chocolate','chão','chinelo','china','chamada','chefe'], target:8, speed:11, maxAtOnce:2 },
@@ -377,6 +379,7 @@ export const LEVELS: Level[] = [
   { id: 'w11-l4', world:11, order:4, mode:'sentence', title:'Lugares e pessoas', emoji:'🗺️', subtitle:'Nomes próprios nas frases.', focusKeys:[], pool:['Mariana mora no Rio de Janeiro','Pedro viajou para Salvador','Roberto adora a cidade de Recife','Fernanda estuda em Brasília','Gabriela conhece o Amazonas'], target:5, goalWpm:20 },
   { id: 'w11-l5', world:11, order:5, mode:'sentence', title:'Diálogos',        emoji:'💬', subtitle:'Cada fala começa com maiúscula.', focusKeys:[], pool:['- Oi, Ana! Tudo bem?','- Bom dia, Professor Pedro!','- Vamos, Carla, está atrasado!','- Obrigado, vovó Helena!','- Até logo, Davi!'], target:5, goalWpm:20 },
   { id: 'w11-l6', world:11, order:6, mode:'text',     title:'Texto com maiúsculas', emoji:'📝', subtitle:'Aplicando tudo.', focusKeys:[], pool:['Ana e Bruno foram ao Parque Municipal. Eles encontraram Carla e Davi brincando perto do lago. Todos voltaram para casa felizes ao entardecer.'], target:1, goalWpm:22 },
+  { id: 'w11-l7', world:11, order:7, mode:'climb',    title:'Escalada dos nomes', emoji:'🧗', subtitle:'Nomes próprios nas nuvens!',            focusKeys:[], pool:['Ana','Bruno','Carla','Davi','Eduardo','Fernanda','Gabriel','Helena','Igor','Júlia','Recife','Manaus','Salvador','Curitiba','Natal','Belém'], target:10 },
 
   // ===== MUNDO 12 — BIBLIOTECA MÁGICA =====
   { id: 'w12-l1', world:12, order:1, mode:'sentence', title:'Sabedoria popular', emoji:'📚', subtitle:'Ditados conhecidos.', focusKeys:[], pool:['de grão em grão a galinha enche o papo','a pressa é inimiga da perfeição','quem não tem cão caça com gato','devagar se vai ao longe','antes só do que mal acompanhado'], target:5, goalWpm:20 },
@@ -392,6 +395,7 @@ export const LEVELS: Level[] = [
   { id: 'w13-l4', world:13, order:4, mode:'sentence', title:'Gratidão',     emoji:'🙏', subtitle:'Obrigado de todo jeito.',focusKeys:[], pool:['obrigado por tudo, vovó','muito obrigada pelo presente','valeu pela ajuda, amigo!','fico grato pelo carinho','que bom ter você aqui'], target:5, goalWpm:22 },
   { id: 'w13-l5', world:13, order:5, mode:'sentence', title:'Coragem',      emoji:'💪', subtitle:'Frases fortes.',          focusKeys:[], pool:['eu vou conseguir, sim!','nada pode me parar agora','uma hora de cada vez, calma','confiança é meu superpoder','vamos, de cabeça erguida!'], target:5, goalWpm:22 },
   { id: 'w13-l6', world:13, order:6, mode:'text',     title:'Monólogo', emoji:'🎭', subtitle:'Textinho teatral.',          focusKeys:[], pool:['era uma manhã ensolarada quando decidi começar tudo de novo. peguei minha mochila, sorri e segui em frente cantando baixinho.'], target:1, goalWpm:24 },
+  { id: 'w13-l7', world:13, order:7, mode:'climb',    title:'Escalada dos sentimentos', emoji:'🧗', subtitle:'Emoções em cada nuvem.',   focusKeys:[], pool:['feliz','triste','bravo','calmo','medo','alegria','susto','raiva','carinho','coragem','paz','gratidão','amor','saudade'], target:10 },
 
   // ===== MUNDO 14 — CIRCO DAS ADIVINHAS =====
   { id: 'w14-l1', world:14, order:1, mode:'sentence', title:'O que é o que é?',  emoji:'🎪', subtitle:'Adivinhas clássicas.',  focusKeys:[], pool:['o que cai sem se machucar?','tem pé mas não anda','tem boca mas não fala','tem dente mas não morde','tem cabeça e não pensa'], target:5, goalWpm:20 },

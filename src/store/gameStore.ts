@@ -11,11 +11,13 @@ export type LevelScore = {
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
 /** Multiplica o `speed` (tempo de travessia) nos modos Balloon/Pie.
- *  >1 = mais lento (mais tempo pra digitar). */
+ *  >1 = mais lento (mais tempo pra digitar).
+ *  Calibrado pra crianças: até o "difícil" mantém ritmo confortável.
+ *  O antigo multiplier do normal (1.0) agora é o difícil. */
 export const DIFFICULTY_SPEED_MULTIPLIER: Record<Difficulty, number> = {
-  easy: 1.5,
-  normal: 1.0,
-  hard: 0.85,
+  easy: 1.7,
+  normal: 1.3,
+  hard: 1.0,
 };
 
 /** Cap máximo de balões/tortas simultâneos por dificuldade.
