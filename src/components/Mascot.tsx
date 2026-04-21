@@ -8,9 +8,9 @@ type Props = {
 };
 
 /**
- * Mascote DigitAI: uma corujinha simpática 🦉.
- * Corujas são clássicas em apps educativos e combinam com "aprender".
- * Renderizada 100% em SVG inline — sem assets externos.
+ * Mascote DigitAI: uma corujinha kawaii 🦉💜
+ * Estilo fofinho, proporções "chibi": cabeça enorme, olhos gigantes,
+ * cores pastéis lilás/rosa, sem bordas duras.
  */
 export function Mascot({ mood = 'happy', size = 140 }: Props) {
   const bounce =
@@ -18,7 +18,7 @@ export function Mascot({ mood = 'happy', size = 140 }: Props) {
       ? { y: [0, -10, 0], rotate: [-5, 5, -5] }
       : mood === 'wave'
       ? { rotate: [-6, 6, -6] }
-      : { y: [0, -5, 0] };
+      : { y: [0, -4, 0] };
 
   const duration = mood === 'cheer' ? 0.6 : mood === 'wave' ? 1.4 : 2.4;
 
@@ -28,78 +28,91 @@ export function Mascot({ mood = 'happy', size = 140 }: Props) {
       animate={bounce}
       transition={{ repeat: Infinity, duration, ease: 'easeInOut' }}
     >
-      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.18))' }}>
+      <svg
+        viewBox="0 0 100 100"
+        width="100%"
+        height="100%"
+        style={{ filter: 'drop-shadow(0 6px 10px rgba(168,120,220,0.35))' }}
+      >
         <defs>
-          <linearGradient id="owl-body" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#c9874c" />
-            <stop offset="100%" stopColor="#8a5226" />
-          </linearGradient>
+          <radialGradient id="owl-body" cx="50%" cy="35%" r="70%">
+            <stop offset="0%" stopColor="#e5cdff" />
+            <stop offset="60%" stopColor="#c8a8ee" />
+            <stop offset="100%" stopColor="#a485d4" />
+          </radialGradient>
           <linearGradient id="owl-belly" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fff1d4" />
-            <stop offset="100%" stopColor="#f6d99a" />
+            <stop offset="0%" stopColor="#fff5e0" />
+            <stop offset="100%" stopColor="#ffe4c4" />
           </linearGradient>
-          <radialGradient id="owl-eye" cx="50%" cy="45%" r="55%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#f1e9d6" />
+          <radialGradient id="owl-eye" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stopColor="#4a3060" />
+            <stop offset="100%" stopColor="#1a0f28" />
+          </radialGradient>
+          <radialGradient id="owl-cheek" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffbcd2" />
+            <stop offset="100%" stopColor="#ff9fc2" stopOpacity="0" />
           </radialGradient>
         </defs>
 
-        {/* tufos de orelha */}
-        <path d="M24 28 L18 12 L32 22 Z" fill="url(#owl-body)" />
-        <path d="M76 28 L82 12 L68 22 Z" fill="url(#owl-body)" />
+        {/* tufos arredondados (não pontudos — mais meigos) */}
+        <ellipse cx="28" cy="18" rx="7" ry="8" fill="url(#owl-body)" transform="rotate(-20 28 18)" />
+        <ellipse cx="72" cy="18" rx="7" ry="8" fill="url(#owl-body)" transform="rotate(20 72 18)" />
 
-        {/* corpo (forma de pera) */}
-        <path
-          d="M20 50 Q20 20 50 20 Q80 20 80 50 Q82 82 50 88 Q18 82 20 50 Z"
-          fill="url(#owl-body)"
-          stroke="#5b3617"
-          strokeWidth="1.5"
-        />
+        {/* corpinho — forma de ovo gordinho, cabeça e corpo integrados */}
+        <ellipse cx="50" cy="54" rx="38" ry="38" fill="url(#owl-body)" />
 
-        {/* barriga creme */}
+        {/* barriga creme (coração arredondado) */}
         <path
-          d="M32 54 Q32 42 50 42 Q68 42 68 54 Q70 78 50 82 Q30 78 32 54 Z"
+          d="M30 58
+             Q30 44 42 42
+             Q50 41 50 48
+             Q50 41 58 42
+             Q70 44 70 58
+             Q72 78 50 84
+             Q28 78 30 58 Z"
           fill="url(#owl-belly)"
-          opacity="0.95"
         />
 
-        {/* asas laterais */}
-        <motion.path
-          d="M22 52 Q14 62 20 78 Q28 74 30 60 Z"
+        {/* asinhas bem pequenas e arredondadas */}
+        <motion.ellipse
+          cx="15"
+          cy="58"
+          rx="7"
+          ry="12"
           fill="url(#owl-body)"
-          stroke="#5b3617"
-          strokeWidth="1.2"
-          animate={mood === 'wave' || mood === 'cheer' ? { rotate: [0, -10, 0] } : {}}
+          animate={mood === 'wave' || mood === 'cheer' ? { rotate: [0, -15, 0] } : {}}
           transition={{ repeat: Infinity, duration: 1 }}
-          style={{ transformOrigin: '22px 52px' }}
+          style={{ transformOrigin: '15px 50px' }}
         />
-        <motion.path
-          d="M78 52 Q86 62 80 78 Q72 74 70 60 Z"
+        <motion.ellipse
+          cx="85"
+          cy="58"
+          rx="7"
+          ry="12"
           fill="url(#owl-body)"
-          stroke="#5b3617"
-          strokeWidth="1.2"
-          animate={mood === 'wave' || mood === 'cheer' ? { rotate: [0, 10, 0] } : {}}
+          animate={mood === 'wave' || mood === 'cheer' ? { rotate: [0, 15, 0] } : {}}
           transition={{ repeat: Infinity, duration: 1 }}
-          style={{ transformOrigin: '78px 52px' }}
+          style={{ transformOrigin: '85px 50px' }}
         />
 
-        {/* "óculos" ao redor dos olhos — moldura clássica de coruja */}
-        <ellipse cx="36" cy="46" rx="15" ry="14" fill="url(#owl-eye)" stroke="#5b3617" strokeWidth="2" />
-        <ellipse cx="64" cy="46" rx="15" ry="14" fill="url(#owl-eye)" stroke="#5b3617" strokeWidth="2" />
+        {/* bochechas rosadas grandes (aparecem atrás dos olhos) */}
+        <ellipse cx="25" cy="52" rx="9" ry="6" fill="url(#owl-cheek)" />
+        <ellipse cx="75" cy="52" rx="9" ry="6" fill="url(#owl-cheek)" />
 
-        {/* olhos — mudam conforme mood */}
+        {/* olhos — ENORMES pra ficar kawaii */}
         <Eyes mood={mood} />
 
-        {/* bico */}
+        {/* biquinho pequenininho */}
         <Beak mood={mood} />
 
-        {/* bochechas rosadas */}
-        <circle cx="22" cy="60" r="3.5" fill="#ff8faa" opacity="0.65" />
-        <circle cx="78" cy="60" r="3.5" fill="#ff8faa" opacity="0.65" />
+        {/* patinhas bem pequenas */}
+        <g fill="#ffb578">
+          <ellipse cx="42" cy="90" rx="5" ry="3" />
+          <ellipse cx="58" cy="90" rx="5" ry="3" />
+        </g>
 
-        {/* patinhas */}
-        <path d="M40 88 Q40 94 36 94 M40 88 Q40 94 44 94" stroke="#ff9e2c" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        <path d="M60 88 Q60 94 56 94 M60 88 Q60 94 64 94" stroke="#ff9e2c" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        {/* brilho extra na cabeça (reflexo de luz) */}
+        <ellipse cx="38" cy="28" rx="10" ry="6" fill="#ffffff" opacity="0.25" />
       </svg>
     </motion.div>
   );
@@ -107,82 +120,75 @@ export function Mascot({ mood = 'happy', size = 140 }: Props) {
 
 function Eyes({ mood }: { mood: Mood }) {
   if (mood === 'cheer') {
-    // Olhos fechados sorridentes ^_^
+    // Olhos fechadinhos, formato ^_^
     return (
-      <>
-        <path d="M30 46 Q36 40 42 46" stroke="#5b3617" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        <path d="M58 46 Q64 40 70 46" stroke="#5b3617" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      </>
+      <g stroke="#3a2a52" strokeWidth="2.8" strokeLinecap="round" fill="none">
+        <path d="M22 48 Q32 42 42 48" />
+        <path d="M58 48 Q68 42 78 48" />
+      </g>
     );
   }
   if (mood === 'sad') {
-    // Olhos fechados tristes
+    // Olhos tristes com lágrima
     return (
-      <>
-        <path d="M30 48 Q36 52 42 48" stroke="#5b3617" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        <path d="M58 48 Q64 52 70 48" stroke="#5b3617" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      </>
+      <g>
+        <g stroke="#3a2a52" strokeWidth="2.8" strokeLinecap="round" fill="none">
+          <path d="M22 52 Q32 58 42 52" />
+          <path d="M58 52 Q68 58 78 52" />
+        </g>
+        <path d="M36 56 Q38 62 36 66 Q34 62 36 56 Z" fill="#7fd4ff" />
+      </g>
     );
   }
-  // happy / wave — olhos grandes com brilho, piscam ocasionalmente
+  // happy / wave — olhos enormes, brilhantes, kawaii
   return (
-    <>
+    <g>
+      {/* globo ocular branco */}
+      <circle cx="32" cy="50" r="11" fill="#ffffff" />
+      <circle cx="68" cy="50" r="11" fill="#ffffff" />
+      {/* íris grande escura */}
       <motion.circle
-        cx={36}
-        cy={46}
-        r={6}
-        fill="#2b2b2b"
-        animate={{ ry: [6, 6, 0.5, 6] }}
-        transition={{ repeat: Infinity, duration: 4.5, times: [0, 0.93, 0.96, 1] }}
+        cx={32}
+        cy={50}
+        r={8.5}
+        fill="url(#owl-eye)"
+        animate={{ ry: [8.5, 8.5, 0.5, 8.5] }}
+        transition={{ repeat: Infinity, duration: 5, times: [0, 0.93, 0.96, 1] }}
       />
       <motion.circle
-        cx={64}
-        cy={46}
-        r={6}
-        fill="#2b2b2b"
-        animate={{ ry: [6, 6, 0.5, 6] }}
-        transition={{ repeat: Infinity, duration: 4.5, times: [0, 0.93, 0.96, 1] }}
+        cx={68}
+        cy={50}
+        r={8.5}
+        fill="url(#owl-eye)"
+        animate={{ ry: [8.5, 8.5, 0.5, 8.5] }}
+        transition={{ repeat: Infinity, duration: 5, times: [0, 0.93, 0.96, 1] }}
       />
-      {/* reflexos brilhantes */}
-      <circle cx="38" cy="43.5" r="2" fill="#ffffff" />
-      <circle cx="66" cy="43.5" r="2" fill="#ffffff" />
-    </>
+      {/* brilho grande (estilo anime) */}
+      <circle cx="35" cy="46" r="3" fill="#ffffff" />
+      <circle cx="71" cy="46" r="3" fill="#ffffff" />
+      {/* brilho pequenininho embaixo */}
+      <circle cx="29" cy="54" r="1.4" fill="#ffffff" opacity="0.8" />
+      <circle cx="65" cy="54" r="1.4" fill="#ffffff" opacity="0.8" />
+    </g>
   );
 }
 
 function Beak({ mood }: { mood: Mood }) {
   if (mood === 'cheer') {
-    // Bico aberto sorrindo
+    // Boquinha aberta sorrindo
     return (
       <path
-        d="M46 58 Q50 66 54 58 Q54 64 50 66 Q46 64 46 58 Z"
-        fill="#ff9e2c"
-        stroke="#c96e00"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
+        d="M46 62 Q50 70 54 62 Q54 68 50 69 Q46 68 46 62 Z"
+        fill="#ff9e4c"
       />
     );
   }
   if (mood === 'sad') {
-    // Bico virado pra baixo
-    return (
-      <path
-        d="M46 60 L50 56 L54 60 L52 64 L48 64 Z"
-        fill="#ff9e2c"
-        stroke="#c96e00"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-    );
+    // Biquinho virado pra baixo, pequenininho
+    return <path d="M47 66 Q50 62 53 66 Q51 68 49 68 Z" fill="#ff9e4c" />;
   }
-  // happy / wave — bico normalzinho
+  // happy / wave — bico diminuto no formato de coração invertido
   return (
-    <path
-      d="M46 58 L50 64 L54 58 Z"
-      fill="#ff9e2c"
-      stroke="#c96e00"
-      strokeWidth="1.2"
-      strokeLinejoin="round"
-    />
+    <path d="M47 62 Q50 60 53 62 Q51 66 50 67 Q49 66 47 62 Z" fill="#ff9e4c" />
   );
 }

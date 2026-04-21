@@ -144,13 +144,15 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   });
 
   // Pré-computa as posições visuais das nuvens (em %).
+  // Zig-zag estilo Doodle Jump: alterna esquerda → centro → direita → centro → esquerda...
+  // y usa 6%..80% pra reservar folga em cima (HUD) e embaixo (teclado/grama).
   const cloudLayout = useMemo(() => {
     const arr: { x: number; y: number }[] = [];
+    // Sequência zig-zag de 4 posições: esquerda, centro-esq, centro-dir, direita.
+    const xPattern = [28, 50, 72, 50];
     for (let i = 0; i < totalClouds; i++) {
-      // y: 0 = base (bottom 8%), totalClouds-1 = topo (bottom 92%)
-      const y = 8 + (i / (totalClouds - 1 || 1)) * 84;
-      // zig-zag: pares à esquerda, ímpares à direita.
-      const x = i % 2 === 0 ? 22 : 78;
+      const y = 6 + (i / (totalClouds - 1 || 1)) * 74;
+      const x = xPattern[i % xPattern.length];
       arr.push({ x, y });
     }
     return arr;
@@ -178,41 +180,60 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         onPause={finished ? undefined : () => setPaused(true)}
       />
 
-      {/* Pico / bandeira no topo */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 text-4xl"
-        style={{ bottom: '94%' }}
-      >
-        🏁
-      </div>
+      {/* Nuvens em zig-zag — container começa bem abaixo do HUD (top-32) */}
+      <div className="absolute inset-x-0 top-32 bottom-28 pointer-events-none">
+        {/* Bandeira de chegada — dentro do container, logo acima da nuvem do topo */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 text-4xl"
+          style={{ bottom: '86%' }}
+        >
+          🏁
+        </div>
+        {/* Estrelinhas decorativas flutuando no fundo */}
+        {[
+          { x: 10, y: 30, d: 0 },
+          { x: 88, y: 50, d: 0.5 },
+          { x: 12, y: 66, d: 1 },
+          { x: 90, y: 72, d: 1.5 },
+          { x: 8, y: 18, d: 0.8 },
+        ].map((s, i) => (
+          <motion.div
+            key={`star-${i}`}
+            className="absolute text-lg opacity-60 pointer-events-none"
+            style={{ left: `${s.x}%`, bottom: `${s.y}%` }}
+            animate={{ opacity: [0.35, 0.8, 0.35], scale: [0.9, 1.1, 0.9] }}
+            transition={{ repeat: Infinity, duration: 2.5, delay: s.d }}
+          >
+            ✨
+          </motion.div>
+        ))}
 
-      {/* Nuvens em zig-zag */}
-      <div className="absolute inset-x-0 top-24 bottom-24 pointer-events-none">
+        {/* Plataformas de nuvem empilhadas em zig-zag horizontal */}
         {cloudLayout.map((c, i) => {
           const reached = i <= position;
           return (
             <div
               key={i}
-              className="absolute -translate-x-1/2 -translate-y-1/2"
+              className="absolute -translate-x-1/2"
               style={{ left: `${c.x}%`, bottom: `${c.y}%` }}
             >
               <CloudSVG lit={reached} />
-              <div className="text-center text-xs text-gray-700 font-bold mt-1 bg-white/70 rounded-full px-2 py-0.5 inline-block">
+              <div className="absolute -left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-700 font-bold bg-white rounded-full w-5 h-5 flex items-center justify-center shadow-pop">
                 {i + 1}
               </div>
             </div>
           );
         })}
 
-        {/* Robozinho na nuvem atual */}
+        {/* Coruja em cima da plataforma atual (apoiada em cima da nuvem) */}
         <motion.div
-          className="absolute -translate-x-1/2 -translate-y-full"
-          animate={{ left: `${robotCloud.x}%`, bottom: `${robotCloud.y}%` }}
+          className="absolute -translate-x-1/2"
+          animate={{ left: `${robotCloud.x}%`, bottom: `calc(${robotCloud.y}% + 14px)` }}
           transition={{ type: 'spring', stiffness: 200, damping: 18 }}
         >
           <Mascot
             mood={finished ? 'cheer' : moveDir === 'down' ? 'sad' : moveDir === 'up' ? 'cheer' : 'happy'}
-            size={64}
+            size={56}
           />
         </motion.div>
 
@@ -328,13 +349,43 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
 }
 
 function CloudSVG({ lit }: { lit: boolean }) {
+  // Plataforma larga e baixa (estilo Doodle Jump) com borda/sombra embaixo.
   return (
-    <svg viewBox="0 0 80 46" width="80" height="46" style={{ filter: lit ? 'drop-shadow(0 0 8px rgba(255,216,77,0.7))' : 'drop-shadow(0 4px 6px rgba(0,0,0,0.12))' }}>
+    <svg
+      viewBox="0 0 140 36"
+      width="120"
+      height="32"
+      style={{
+        filter: lit
+          ? 'drop-shadow(0 0 10px rgba(255,216,77,0.75))'
+          : 'drop-shadow(0 3px 4px rgba(0,0,0,0.18))',
+      }}
+    >
+      {/* sombra inferior (dá sensação de plataforma sólida) */}
+      <ellipse cx="70" cy="30" rx="52" ry="4" fill="#000000" opacity="0.12" />
+      {/* corpo da nuvem — forma bulbosa horizontal */}
       <path
-        d="M18 30 Q10 30 10 22 Q10 14 20 14 Q22 6 32 8 Q38 2 48 6 Q58 4 60 14 Q72 14 72 24 Q72 32 62 32 Q50 36 38 32 Q28 36 18 30 Z"
+        d="M20 24
+           Q8 24 8 18
+           Q8 10 18 10
+           Q22 2 34 4
+           Q42 -2 54 4
+           Q64 0 74 4
+           Q84 -2 96 4
+           Q108 2 116 10
+           Q132 10 132 18
+           Q132 26 120 26
+           Q100 30 70 28
+           Q40 30 20 24 Z"
         fill={lit ? '#fffbe0' : '#ffffff'}
-        stroke={lit ? '#ffd84d' : '#d0d6e2'}
-        strokeWidth="1.5"
+      />
+      {/* borda inferior mais saturada — dá "peso" à plataforma */}
+      <path
+        d="M20 24 Q40 30 70 28 Q100 30 120 26"
+        fill="none"
+        stroke={lit ? '#ffd84d' : '#c2cbd9'}
+        strokeWidth="2.5"
+        strokeLinecap="round"
       />
     </svg>
   );
