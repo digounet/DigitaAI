@@ -261,6 +261,7 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
           stars={finished.stars}
           accuracy={finished.accuracy}
           wpm={finished.wpm}
+          goalWpm={level.goalWpm}
           onHome={onHome}
           onRetry={() => {
             reset();

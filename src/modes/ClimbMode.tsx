@@ -323,6 +323,7 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
           stars={finished.stars}
           accuracy={finished.accuracy}
           wpm={finished.wpm}
+          goalWpm={level.goalWpm}
           onHome={onHome}
           onRetry={() => {
             reset();

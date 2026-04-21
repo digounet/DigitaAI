@@ -8,12 +8,50 @@ type Props = {
   stars: number;       // 0..3
   accuracy: number;    // 0..100
   wpm: number;
+  /** Meta de PPM do nível; ausente em modos sem alvo de velocidade (balões/tortas). */
+  goalWpm?: number;
   onRetry: () => void;
   onNext?: () => void;
   onHome: () => void;
 };
 
-export function ResultModal({ stars, accuracy, wpm, onRetry, onNext, onHome }: Props) {
+type MetricStatus = 'ok' | 'near' | 'low';
+
+// Thresholds espelham starsFor() em useTypingStats.ts.
+function accuracyStatus(acc: number, hasGoal: boolean): MetricStatus {
+  if (acc >= 95) return 'ok';
+  if (acc >= (hasGoal ? 85 : 80)) return 'near';
+  return 'low';
+}
+
+function wpmStatus(wpm: number, goalWpm: number): MetricStatus {
+  if (wpm >= goalWpm) return 'ok';
+  if (wpm >= goalWpm * 0.7) return 'near';
+  return 'low';
+}
+
+const STATUS_ICON: Record<MetricStatus, string> = { ok: '✅', near: '⚠️', low: '❌' };
+
+function feedbackTip(
+  stars: number,
+  accSt: MetricStatus,
+  wpmSt: MetricStatus | null,
+  goalWpm?: number,
+): string | null {
+  if (stars === 3) return 'Perfeito! Precisão e velocidade nota 10! 🎯';
+  if (goalWpm !== undefined && wpmSt) {
+    const accOk = accSt === 'ok';
+    const wpmOk = wpmSt === 'ok';
+    if (accOk && !wpmOk)
+      return `Você foi super preciso! Pra ganhar a 3ª ⭐ tente digitar um pouquinho mais rápido (meta: ${goalWpm} PPM).`;
+    if (!accOk && wpmOk)
+      return 'Você foi rápido! Agora tente errar menos letrinhas (meta: 95% de precisão).';
+    return 'Dá pra melhorar os dois! Respira fundo e tenta de novo, com calma. 💪';
+  }
+  return 'Tente errar menos letrinhas pra ganhar mais estrelas (meta: 95% de precisão).';
+}
+
+export function ResultModal({ stars, accuracy, wpm, goalWpm, onRetry, onNext, onHome }: Props) {
   useEffect(() => {
     playLevelUp();
     const ids: number[] = [];
@@ -33,6 +71,10 @@ export function ResultModal({ stars, accuracy, wpm, onRetry, onNext, onHome }: P
 
   const msg =
     stars === 3 ? 'Incrível!' : stars === 2 ? 'Muito bem!' : stars === 1 ? 'Boa!' : 'Quase lá!';
+
+  const accSt = accuracyStatus(accuracy, goalWpm !== undefined);
+  const wpmSt = goalWpm !== undefined ? wpmStatus(wpm, goalWpm) : null;
+  const tip = feedbackTip(stars, accSt, wpmSt, goalWpm);
 
   const ring = (i: number) =>
     focused === i ? 'ring-4 ring-grape/60 outline-none' : '';
@@ -61,16 +103,31 @@ export function ResultModal({ stars, accuracy, wpm, onRetry, onNext, onHome }: P
             </motion.span>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-3 my-6">
+        <div className="grid grid-cols-2 gap-3 mt-6 mb-3">
           <div className="bg-sky2 rounded-2xl p-3">
-            <div className="text-xs text-gray-600">Precisão</div>
+            <div className="flex items-center justify-between text-xs text-gray-600">
+              <span>Precisão</span>
+              <span aria-label={`status precisão: ${accSt}`}>{STATUS_ICON[accSt]}</span>
+            </div>
             <div className="text-2xl font-bold">{Math.round(accuracy)}%</div>
+            <div className="text-[11px] text-gray-500 mt-0.5">meta 95%</div>
           </div>
           <div className="bg-mint/70 rounded-2xl p-3">
-            <div className="text-xs text-gray-600">Velocidade</div>
+            <div className="flex items-center justify-between text-xs text-gray-600">
+              <span>Velocidade</span>
+              {wpmSt && <span aria-label={`status velocidade: ${wpmSt}`}>{STATUS_ICON[wpmSt]}</span>}
+            </div>
             <div className="text-2xl font-bold">{Math.round(wpm)} PPM</div>
+            <div className="text-[11px] text-gray-500 mt-0.5">
+              {goalWpm !== undefined ? `meta ${goalWpm} PPM` : 'sem meta'}
+            </div>
           </div>
         </div>
+        {tip && (
+          <div className="bg-sun/30 border border-sun/60 rounded-2xl p-3 mb-5 text-sm text-gray-700">
+            {tip}
+          </div>
+        )}
         <div className="flex flex-col gap-2">
           <button
             ref={btnRef(0)}
