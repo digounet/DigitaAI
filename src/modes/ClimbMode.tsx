@@ -143,20 +143,20 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
     },
   });
 
-  // Pré-computa as posições visuais das nuvens (em %).
-  // Zig-zag estilo Doodle Jump: alterna esquerda → centro → direita → centro → esquerda...
-  // y usa 6%..80% pra reservar folga em cima (HUD) e embaixo (teclado/grama).
+  /** Cada nuvem tem X fixo em zig-zag. Y é computado dinamicamente — o mundo
+   *  rola verticalmente conforme a coruja sobe (estilo Doodle Jump/parallax).
+   *  Só ~4 nuvens ficam visíveis por vez; as já passadas descem e somem, as
+   *  próximas entram por cima. */
+  const SPACING_Y = 22;       // % de distância vertical entre nuvens
+  const ROBOT_SCREEN_Y = 38;  // % do bottom do container onde a coruja fica
+
   const cloudLayout = useMemo(() => {
-    const arr: { x: number; y: number }[] = [];
-    // Sequência zig-zag de 4 posições: esquerda, centro-esq, centro-dir, direita.
     const xPattern = [28, 50, 72, 50];
-    for (let i = 0; i < totalClouds; i++) {
-      const y = 6 + (i / (totalClouds - 1 || 1)) * 74;
-      const x = xPattern[i % xPattern.length];
-      arr.push({ x, y });
-    }
-    return arr;
+    return Array.from({ length: totalClouds }, (_, i) => ({ x: xPattern[i % xPattern.length] }));
   }, [totalClouds]);
+
+  /** Posição Y visual (%) de uma nuvem dada a posição atual da coruja. */
+  const cloudScreenY = (i: number) => ROBOT_SCREEN_Y + (i - position) * SPACING_Y;
 
   const robotCloud = cloudLayout[Math.min(position, totalClouds - 1)];
   const nextChar = word[typed.length];
@@ -180,55 +180,72 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         onPause={finished ? undefined : () => setPaused(true)}
       />
 
-      {/* Nuvens em zig-zag — container começa bem abaixo do HUD (top-32) */}
-      <div className="absolute inset-x-0 top-32 bottom-28 pointer-events-none">
-        {/* Bandeira de chegada — dentro do container, logo acima da nuvem do topo */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 text-4xl"
-          style={{ bottom: '86%' }}
+      {/* Área do "mundo" — nuvens rolam verticalmente conforme a coruja sobe. */}
+      <div className="absolute inset-x-0 top-32 bottom-56 pointer-events-none overflow-hidden">
+        {/* Bandeira de chegada — entra em cena quando a coruja chega perto do topo. */}
+        <motion.div
+          className="absolute left-1/2 -translate-x-1/2 text-5xl"
+          animate={{ bottom: `${cloudScreenY(totalClouds - 1) + 18}%` }}
+          transition={{ type: 'spring', stiffness: 200, damping: 22 }}
         >
           🏁
-        </div>
-        {/* Estrelinhas decorativas flutuando no fundo */}
+        </motion.div>
+
+        {/* Estrelinhas decorativas — parallax mais lento que as nuvens (efeito de profundidade) */}
         {[
           { x: 10, y: 30, d: 0 },
           { x: 88, y: 50, d: 0.5 },
           { x: 12, y: 66, d: 1 },
           { x: 90, y: 72, d: 1.5 },
           { x: 8, y: 18, d: 0.8 },
+          { x: 92, y: 28, d: 0.3 },
         ].map((s, i) => (
           <motion.div
             key={`star-${i}`}
-            className="absolute text-lg opacity-60 pointer-events-none"
-            style={{ left: `${s.x}%`, bottom: `${s.y}%` }}
-            animate={{ opacity: [0.35, 0.8, 0.35], scale: [0.9, 1.1, 0.9] }}
-            transition={{ repeat: Infinity, duration: 2.5, delay: s.d }}
+            className="absolute text-lg opacity-60"
+            style={{ left: `${s.x}%` }}
+            // Parallax 40% do scroll das nuvens — nuvens rolam mais rápido.
+            animate={{
+              bottom: `${s.y - position * SPACING_Y * 0.4}%`,
+              opacity: [0.35, 0.75, 0.35],
+              scale: [0.9, 1.1, 0.9],
+            }}
+            transition={{
+              bottom: { type: 'spring', stiffness: 180, damping: 22 },
+              opacity: { repeat: Infinity, duration: 2.5, delay: s.d },
+              scale: { repeat: Infinity, duration: 2.5, delay: s.d },
+            }}
           >
             ✨
           </motion.div>
         ))}
 
-        {/* Plataformas de nuvem empilhadas em zig-zag horizontal */}
+        {/* Plataformas de nuvem — só as próximas ~4 ficam visíveis; as passadas caem pra baixo e somem. */}
         {cloudLayout.map((c, i) => {
+          const screenY = cloudScreenY(i);
+          // Fora do viewport (com folga pra animação). Desmonta pra economizar.
+          if (screenY < -20 || screenY > 120) return null;
           const reached = i <= position;
           return (
-            <div
+            <motion.div
               key={i}
               className="absolute -translate-x-1/2"
-              style={{ left: `${c.x}%`, bottom: `${c.y}%` }}
+              initial={false}
+              animate={{ left: `${c.x}%`, bottom: `${screenY}%`, opacity: screenY < 0 ? 0 : 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 22 }}
             >
               <CloudSVG lit={reached} />
               <div className="absolute -left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-700 font-bold bg-white rounded-full w-5 h-5 flex items-center justify-center shadow-pop">
                 {i + 1}
               </div>
-            </div>
+            </motion.div>
           );
         })}
 
-        {/* Coruja em cima da plataforma atual (apoiada em cima da nuvem) */}
+        {/* Coruja — fica ancorada perto do centro vertical, acompanhando o X da nuvem atual. */}
         <motion.div
           className="absolute -translate-x-1/2"
-          animate={{ left: `${robotCloud.x}%`, bottom: `calc(${robotCloud.y}% + 14px)` }}
+          animate={{ left: `${robotCloud.x}%`, bottom: `calc(${ROBOT_SCREEN_Y}% + 14px)` }}
           transition={{ type: 'spring', stiffness: 200, damping: 18 }}
         >
           <Mascot
@@ -237,7 +254,7 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
           />
         </motion.div>
 
-        {/* Partículas */}
+        {/* Partículas ao lado da coruja */}
         <div className="absolute inset-0">
           <AnimatePresence>
             {bursts.map((b) => (
@@ -248,7 +265,7 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.9 }}
                 className="absolute text-3xl select-none"
-                style={{ left: `${robotCloud.x}%`, bottom: `${robotCloud.y + 8}%`, transform: 'translate(-50%, 0)' }}
+                style={{ left: `${robotCloud.x}%`, bottom: `${ROBOT_SCREEN_Y + 8}%`, transform: 'translate(-50%, 0)' }}
               >
                 {b.emoji}
               </motion.div>
