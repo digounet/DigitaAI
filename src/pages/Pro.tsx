@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mascot } from '../components/Mascot';
@@ -8,6 +8,19 @@ export function Pro() {
   const [note, setNote] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [interestCount, setInterestCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    import('../services/interests').then(({ getInterestCount }) => {
+      getInterestCount().then((n) => {
+        if (!cancelled) setInterestCount(n);
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,6 +30,7 @@ export function Pro() {
       const { registerInterest } = await import('../services/interests');
       await registerInterest(email, note);
       setStatus('done');
+      setInterestCount((prev) => (prev == null ? prev : prev + 1));
     } catch (err) {
       console.error(err);
       setErrorMsg((err as Error).message || 'Erro ao enviar');
@@ -65,6 +79,16 @@ export function Pro() {
             <div className="text-2xl font-bold my-1">R$ 9,90 <span className="text-base font-normal text-gray-600">/mês</span></div>
             <div className="text-xs text-gray-500">ou R$ 79/ano (33% de economia)</div>
           </div>
+
+          {interestCount != null && interestCount > 0 && (
+            <div className="mt-5 flex items-center justify-center gap-2 rounded-2xl bg-sun/20 border border-sun/40 px-4 py-3 text-center">
+              <span className="text-2xl">👨‍👩‍👧‍👦</span>
+              <span className="text-sm">
+                <b>{interestCount.toLocaleString('pt-BR')}</b>{' '}
+                {interestCount === 1 ? 'família já está' : 'famílias já estão'} na lista de espera
+              </span>
+            </div>
+          )}
 
           <div className="mt-6">
             <h2 className="text-lg font-bold mb-1">Quer ser avisado no lançamento?</h2>
