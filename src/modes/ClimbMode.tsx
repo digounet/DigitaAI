@@ -236,13 +236,13 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         </div>
       </div>
 
-      {/* Card da palavra — central, chamativo */}
-      <div className="relative z-10 flex-1 flex items-end justify-center pb-40 pointer-events-none">
+      {/* Card da palavra — fixo no centro horizontal, acima do teclado e das nuvens. */}
+      <div className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none" style={{ top: '42%' }}>
         <motion.div
           key={word}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white/95 rounded-3xl shadow-bubbly px-6 py-4 font-mono text-2xl md:text-3xl font-bold"
+          initial={{ scale: 0.8, opacity: 0, y: -8 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          className="bg-white/95 rounded-3xl shadow-bubbly px-6 py-4 font-mono text-2xl md:text-3xl font-bold whitespace-nowrap"
         >
           {word.split('').map((ch, i) => {
             const matched = i < typed.length && typed[i].toLowerCase() === ch.toLowerCase();
