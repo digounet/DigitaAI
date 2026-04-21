@@ -1,4 +1,4 @@
-export type GameMode = 'balloons' | 'pies' | 'sentence' | 'text';
+export type GameMode = 'balloons' | 'pies' | 'sentence' | 'text' | 'climb';
 
 export type Level = {
   id: string;
@@ -295,7 +295,8 @@ export const LEVELS: Level[] = [
   { id: 'w4-l12', world:4, order:12, mode:'pies', title:'Esportes',     emoji:'⚽', subtitle:'Movimente-se!',                            focusKeys:[], pool:SPORT_WORDS,     target:10, speed:10, maxAtOnce:2 },
   { id: 'w4-l13', world:4, order:13, mode:'pies', title:'Profissões',   emoji:'👩‍🚀', subtitle:'O que quer ser?',                        focusKeys:[], pool:JOB_WORDS,       target:10, speed:10, maxAtOnce:2 },
   { id: 'w4-l14', world:4, order:14, mode:'pies', title:'Aventura',     emoji:'🚀', subtitle:'Palavras maiores.',                        focusKeys:[], pool:MEDIUM_WORDS,    target:12, speed:10, maxAtOnce:3 },
-  { id: 'w4-l15', world:4, order:15, mode:'pies', title:'Gigantes',     emoji:'🦕', subtitle:'Palavras compridas.',                      focusKeys:[], pool:BIG_WORDS,       target:10, speed:10, maxAtOnce:2 },
+  { id: 'w4-l15', world:4, order:15, mode:'pies',  title:'Gigantes',     emoji:'🦕', subtitle:'Palavras compridas.',                      focusKeys:[], pool:BIG_WORDS,       target:10, speed:10, maxAtOnce:2 },
+  { id: 'w4-l16', world:4, order:16, mode:'climb', title:'Escalada das frutas', emoji:'🧗', subtitle:'Suba as nuvens digitando palavras certinho!', focusKeys:[], pool:[...FRUIT_WORDS,...SIMPLE_WORDS], target:10 },
 
   // ===== MUNDO 5 — JARDIM DAS FRASES =====
   { id: 'w5-l1',  world:5, order:1,  mode:'sentence', title:'Frases amigas',     emoji:'💬', subtitle:'Digite frases completas.',    focusKeys:[], pool:SENT_SIMPLE,          target:5, goalWpm:10 },
@@ -349,6 +350,7 @@ export const LEVELS: Level[] = [
   { id: 'w8-l8',  world:8, order:8,  mode:'text',     title:'Monte Everest',     emoji:'🏔️', subtitle:'Texto inteiro, meta 40 PPM.',      focusKeys:[], pool:[TEXTS[1]], target:1, goalWpm:40 },
   { id: 'w8-l9',  world:8, order:9,  mode:'text',     title:'Supernova',         emoji:'💫', subtitle:'Meta 45 PPM.',                     focusKeys:[], pool:[TEXTS[3]], target:1, goalWpm:45 },
   { id: 'w8-l10', world:8, order:10, mode:'text',     title:'Campeão da digitação', emoji:'🏆', subtitle:'A prova final! 50 PPM.',       focusKeys:[], pool:[TEXTS[9]], target:1, goalWpm:50 },
+  { id: 'w8-l11', world:8, order:11, mode:'climb',    title:'Escalada relâmpago',   emoji:'🧗', subtitle:'Palavras rápidas sem errar. Suba a montanha!', focusKeys:[], pool:[...SIMPLE_WORDS,...MEDIUM_WORDS], target:12 },
 
   // ===== MUNDO 9 — GALERIA DOS ACENTOS =====
   { id: 'w9-l1',  world:9, order:1,  mode:'pies',     title:'Cedilha (ç)',    emoji:'🎨', subtitle:'A letrinha do rabicho.',                focusKeys:['ç'], pool:['aço','caça','laço','moça','braço','dança','abraço','lança','poça','caça'], target:8, speed:12, maxAtOnce:1 },
@@ -370,10 +372,10 @@ export const LEVELS: Level[] = [
 
   // ===== MUNDO 11 — MONTANHA DAS MAIÚSCULAS =====
   { id: 'w11-l1', world:11, order:1, mode:'pies', title:'Nomes próprios',  emoji:'🔠', subtitle:'Começam com maiúscula.',    focusKeys:[], pool:['Ana','Bruno','Carla','Davi','Eduardo','Fernanda','Gabriel','Helena','Igor','Júlia'], target:10, speed:12, maxAtOnce:2 },
-  { id: 'w11-l2', world:11, order:2, mode:'pies', title:'Cidades',          emoji:'🏙️', subtitle:'Nomes de cidades.',          focusKeys:[], pool:['Brasil','Recife','Fortaleza','Manaus','Brasília','Salvador','Porto','Natal','Belém','Curitiba'], target:10, speed:12, maxAtOnce:2 },
+  { id: 'w11-l2', world:11, order:2, mode:'pies', title:'Cidades',          emoji:'🏙️', subtitle:'Nomes de cidades.',          focusKeys:[], pool:['Recife','Fortaleza','Manaus','Brasília','Salvador','Curitiba','Natal','Belém','Santos','Goiânia'], target:10, speed:12, maxAtOnce:2 },
   { id: 'w11-l3', world:11, order:3, mode:'sentence', title:'Frases iniciais', emoji:'🔠', subtitle:'Primeira letra grande.',  focusKeys:[], pool:['Ana foi à escola hoje','Bruno gosta de jogar bola','Carla tem uma bicicleta nova','Davi come maçã no lanche','Eduardo brinca no parque'], target:5, goalWpm:18 },
   { id: 'w11-l4', world:11, order:4, mode:'sentence', title:'Lugares e pessoas', emoji:'🗺️', subtitle:'Nomes próprios nas frases.', focusKeys:[], pool:['Mariana mora no Rio de Janeiro','Pedro viajou para Salvador','Roberto adora a cidade de Recife','Fernanda estuda em Brasília','Gabriela conhece o Amazonas'], target:5, goalWpm:20 },
-  { id: 'w11-l5', world:11, order:5, mode:'sentence', title:'Diálogos',        emoji:'💬', subtitle:'Cada fala começa com maiúscula.', focusKeys:[], pool:['— Oi, Ana! Tudo bem?','— Bom dia, Professor Pedro!','— Vamos, Carla, está atrasado!','— Obrigado, vovó Helena!','— Até logo, Davi!'], target:5, goalWpm:20 },
+  { id: 'w11-l5', world:11, order:5, mode:'sentence', title:'Diálogos',        emoji:'💬', subtitle:'Cada fala começa com maiúscula.', focusKeys:[], pool:['- Oi, Ana! Tudo bem?','- Bom dia, Professor Pedro!','- Vamos, Carla, está atrasado!','- Obrigado, vovó Helena!','- Até logo, Davi!'], target:5, goalWpm:20 },
   { id: 'w11-l6', world:11, order:6, mode:'text',     title:'Texto com maiúsculas', emoji:'📝', subtitle:'Aplicando tudo.', focusKeys:[], pool:['Ana e Bruno foram ao Parque Municipal. Eles encontraram Carla e Davi brincando perto do lago. Todos voltaram para casa felizes ao entardecer.'], target:1, goalWpm:22 },
 
   // ===== MUNDO 12 — BIBLIOTECA MÁGICA =====

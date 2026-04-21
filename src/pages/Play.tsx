@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BalloonMode } from '../modes/BalloonMode';
 import { PieMode } from '../modes/PieMode';
 import { TextMode } from '../modes/TextMode';
+import { ClimbMode } from '../modes/ClimbMode';
 import { LEVELS, getNextLevel } from '../data/levels';
 import { useGame } from '../store/gameStore';
 
@@ -90,6 +91,17 @@ export function Play() {
           onRetry={onRetry}
           onNext={onNext}
           isText
+        />
+      );
+    case 'climb':
+      return (
+        <ClimbMode
+          key={key}
+          level={level}
+          onFinish={onFinish}
+          onHome={onHome}
+          onRetry={onRetry}
+          onNext={onNext}
         />
       );
   }
