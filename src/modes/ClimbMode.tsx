@@ -274,8 +274,9 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
         </div>
       </div>
 
-      {/* Card da palavra — fixo no centro horizontal, acima do teclado e das nuvens. */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none" style={{ top: '42%' }}>
+      {/* Card da palavra — ancorado logo abaixo do HUD pra não sobrepor a coruja
+          que circula pelo meio da tela conforme sobe as nuvens. */}
+      <div className="absolute left-1/2 -translate-x-1/2 z-40 pointer-events-none" style={{ top: 'calc(5rem + 8px)' }}>
         <motion.div
           key={word}
           initial={{ scale: 0.8, opacity: 0, y: -8 }}
