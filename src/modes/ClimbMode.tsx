@@ -10,6 +10,7 @@ import { getLessonPosition, getWorldMeta, levelHasDigits } from '../data/levels'
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playStar, playWordDone, unlockAudio } from '../audio/sfx';
+import { useGame, effectiveGoalWpm } from '../store/gameStore';
 
 type Props = {
   level: Level;
@@ -49,6 +50,8 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   const [bursts, setBursts] = useState<Burst[]>([]);
   const burstIdRef = useRef(0);
   const { stats, registerHit, registerMiss, reset } = useTypingStats();
+  const difficulty = useGame((s) => s.difficulty);
+  const goalWpm = effectiveGoalWpm(level.goalWpm, difficulty);
 
   const finishedRef = useRef(false);
   const pausedRef = useRef(false);
@@ -109,7 +112,7 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
               const acc = stats.accuracy;
               const wpm = stats.wpm;
               window.setTimeout(() => {
-                setFinished({ stars: starsFor(acc, wpm, level.goalWpm), wpm, accuracy: acc });
+                setFinished({ stars: starsFor(acc, wpm, goalWpm), wpm, accuracy: acc });
               }, 500);
               return;
             }
@@ -323,7 +326,7 @@ export function ClimbMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
           stars={finished.stars}
           accuracy={finished.accuracy}
           wpm={finished.wpm}
-          goalWpm={level.goalWpm}
+          goalWpm={goalWpm}
           onHome={onHome}
           onRetry={() => {
             reset();

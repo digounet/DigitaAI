@@ -11,6 +11,7 @@ import { getLessonPosition, getWorldMeta, levelHasDigits } from '../data/levels'
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playStar, playWordDone, unlockAudio } from '../audio/sfx';
+import { useGame, effectiveGoalWpm } from '../store/gameStore';
 
 type Props = {
   level: Level;
@@ -42,6 +43,8 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
   const [bursts, setBursts] = useState<Burst[]>([]);
   const burstIdRef = useRef(0);
   const { stats, registerHit, registerMiss, reset } = useTypingStats();
+  const difficulty = useGame((s) => s.difficulty);
+  const goalWpm = effectiveGoalWpm(level.goalWpm, difficulty);
 
   const phrase = level.pool[phraseIdx] ?? '';
   const nextChar = phrase[typed.length] ?? '';
@@ -127,7 +130,7 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
             const acc = stats.accuracy;
             const wpm = stats.wpm;
             playStar();
-            setFinished({ stars: starsFor(acc, wpm, level.goalWpm), wpm, accuracy: acc });
+            setFinished({ stars: starsFor(acc, wpm, goalWpm), wpm, accuracy: acc });
           } else {
             window.setTimeout(() => {
               setPhraseIdx(ni);
@@ -246,7 +249,7 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
         <div className="mt-3 flex gap-2 flex-wrap justify-center">
           <Stat label="🎯 Precisão" value={`${Math.round(stats.displayAccuracy)}%`} />
           <Stat label="⚡ PPM" value={Math.round(stats.wpm).toString()} />
-          {level.goalWpm && <Stat label="🏁 Meta" value={`${level.goalWpm} PPM`} />}
+          {goalWpm && <Stat label="🏁 Meta" value={`${goalWpm} PPM`} />}
         </div>
       </div>
 
@@ -261,7 +264,7 @@ export function TextMode({ level, onFinish, onHome, onRetry, onNext, isText }: P
           stars={finished.stars}
           accuracy={finished.accuracy}
           wpm={finished.wpm}
-          goalWpm={level.goalWpm}
+          goalWpm={goalWpm}
           onHome={onHome}
           onRetry={() => {
             reset();
