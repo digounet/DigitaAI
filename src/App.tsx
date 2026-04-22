@@ -14,6 +14,7 @@ import './App.css';
 const Diagnostic = lazy(() => import('./pages/Diagnostic').then((m) => ({ default: m.Diagnostic })));
 const Ranking = lazy(() => import('./pages/Ranking').then((m) => ({ default: m.Ranking })));
 const Pro = lazy(() => import('./pages/Pro').then((m) => ({ default: m.Pro })));
+const Admin = lazy(() => import('./pages/Admin').then((m) => ({ default: m.Admin })));
 
 const Loading = () => (
   <div className="flex-1 flex items-center justify-center text-lg text-gray-500">Carregando…</div>
@@ -46,6 +47,7 @@ function App() {
           <Route path="/test" element={<Diagnostic />} />
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/pro" element={<Pro />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/play/:levelId" element={<Play />} />
         </Routes>
       </Suspense>

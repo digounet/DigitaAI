@@ -4,6 +4,7 @@ import { Mascot } from '../components/Mascot';
 import { AuthBadge } from '../components/AuthBadge';
 import { AdSlot } from '../components/AdSlot';
 import { DonationModal } from '../components/DonationModal';
+import { RedeemCodeModal } from '../components/RedeemCodeModal';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { WORLDS, getLevelsByWorld, LEVELS } from '../data/levels';
 import { useGame } from '../store/gameStore';
@@ -45,8 +46,32 @@ export function Home() {
   }, []);
 
   const [donationOpen, setDonationOpen] = useState(false);
+  const [redeemOpen, setRedeemOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showAdminLink, setShowAdminLink] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
+
+  // Link pro painel admin: só aparece se o usuário logado é admin.
+  useEffect(() => {
+    let cancelled = false;
+    let unsub: (() => void) | null = null;
+    (async () => {
+      const [{ onAuthStateChanged }, { auth }, { isAdmin }] = await Promise.all([
+        import('firebase/auth'),
+        import('../firebase'),
+        import('../services/admin'),
+      ]);
+      if (cancelled) return;
+      unsub = onAuthStateChanged(auth, async (user) => {
+        const ok = await isAdmin(user);
+        if (!cancelled) setShowAdminLink(ok);
+      });
+    })();
+    return () => {
+      cancelled = true;
+      unsub?.();
+    };
+  }, []);
 
   // Botão "Instalar app" — só aparece se o browser já disparou
   // `beforeinstallprompt` (via pwa.ts) e o app ainda não está em
@@ -317,6 +342,20 @@ export function Home() {
           >
             ❤️ Apoiar
           </button>
+          <button
+            onClick={() => setRedeemOpen(true)}
+            className="bg-white/85 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
+          >
+            🎁 Resgatar código
+          </button>
+          {showAdminLink && (
+            <Link
+              to="/admin"
+              className="bg-grape text-white rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm font-bold"
+            >
+              🛠️ Admin
+            </Link>
+          )}
           {installable && (
             <motion.button
               initial={{ scale: 0.8, opacity: 0 }}
@@ -484,6 +523,7 @@ export function Home() {
       </footer>
 
       {donationOpen && <DonationModal onClose={() => setDonationOpen(false)} />}
+      {redeemOpen && <RedeemCodeModal onClose={() => setRedeemOpen(false)} />}
     </div>
   );
 }
