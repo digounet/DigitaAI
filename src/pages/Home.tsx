@@ -9,6 +9,7 @@ import { WORLDS, getLevelsByWorld, LEVELS } from '../data/levels';
 import { useGame } from '../store/gameStore';
 import { unlockAudio } from '../audio/sfx';
 import { useToolbarKeyboardNav } from '../hooks/useToolbarKeyboardNav';
+import { canInstall, isStandalone, promptInstall } from '../pwa';
 
 export function Home() {
   const {
@@ -46,6 +47,26 @@ export function Home() {
   const [donationOpen, setDonationOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
+
+  // Botão "Instalar app" — só aparece se o browser já disparou
+  // `beforeinstallprompt` (via pwa.ts) e o app ainda não está em
+  // modo standalone. Escutar os eventos permite reagir mesmo que
+  // o prompt chegue depois do Home ter montado.
+  const [installable, setInstallable] = useState<boolean>(canInstall() && !isStandalone());
+  useEffect(() => {
+    if (isStandalone()) return;
+    const refresh = () => setInstallable(canInstall() && !isStandalone());
+    window.addEventListener('pwa:installable', refresh);
+    window.addEventListener('pwa:installed', refresh);
+    return () => {
+      window.removeEventListener('pwa:installable', refresh);
+      window.removeEventListener('pwa:installed', refresh);
+    };
+  }, []);
+  const handleInstall = async () => {
+    const outcome = await promptInstall();
+    if (outcome !== 'unavailable') setInstallable(false);
+  };
 
   // Fecha o popover de ajustes ao clicar fora ou pressionar Esc.
   useEffect(() => {
@@ -296,6 +317,16 @@ export function Home() {
           >
             ❤️ Apoiar
           </button>
+          {installable && (
+            <motion.button
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              onClick={handleInstall}
+              className="bg-mint text-gray-900 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm font-bold"
+            >
+              📲 Instalar app
+            </motion.button>
+          )}
         </div>
 
         {!diagnosticDone && (
