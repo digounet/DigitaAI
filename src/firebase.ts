@@ -8,7 +8,12 @@ import {
   type Auth,
   type User,
 } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyA06SswgQWTwZPBoUnmXD19VTrQstMvGGk',
@@ -22,7 +27,19 @@ const firebaseConfig = {
 
 export const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
+
+// Usa cache persistente em IndexedDB. Com isso:
+//  - Leituras offline resolvem a partir do cache local (ex.: ranking
+//    mostra o último snapshot visto em vez de ficar vazio).
+//  - Escritas feitas offline ficam em fila e são enviadas automaticamente
+//    quando a conexão volta (ex.: enviar pontuação depois de jogar no
+//    avião, cadastrar interesse no Pro sem rede).
+//  - `persistentMultipleTabManager` impede corrida entre abas abertas.
+// Se o navegador não suportar (Safari modo privado antigo), o SDK cai
+// silenciosamente em cache só-em-memória.
+export const db: Firestore = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
 
 // Resolve depois do primeiro onAuthStateChanged pra evitar o race de
 // `auth.currentUser` ser null durante os primeiros ms da inicialização.
