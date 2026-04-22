@@ -34,10 +34,13 @@ export type ProgressSlot = {
   scores: Record<string, LevelScore>;
   diagnosticDone: boolean;
   recommendedLevelId: string | null;
+  /** Níveis desbloqueados manualmente (por código de admin). Não conta estrela,
+   *  só libera o acesso. Persistido por dificuldade. */
+  unlockedIds: string[];
 };
 
 function emptySlot(): ProgressSlot {
-  return { scores: {}, diagnosticDone: false, recommendedLevelId: null };
+  return { scores: {}, diagnosticDone: false, recommendedLevelId: null, unlockedIds: [] };
 }
 
 function emptyAllProgress(): Record<Difficulty, ProgressSlot> {
@@ -65,6 +68,8 @@ type GameState = {
   /** Marca o teste inicial como feito e desbloqueia os níveis anteriores ao recomendado. */
   applyDiagnostic: (recommendedLevelId: string, wpm: number, accuracy: number) => void;
   skipDiagnostic: () => void;
+  /** Libera níveis manualmente no slot da dificuldade informada (via código). */
+  applyUnlock: (difficulty: Difficulty, levelIds: string[]) => void;
   /** Zera só o slot da dificuldade ativa. */
   resetProgress: () => void;
   /** Merge vindo do Firebase: aceita formato novo (allProgress) ou antigo (scores plano = normal). */
@@ -92,10 +97,12 @@ function mergeSlot(a: ProgressSlot, b: Partial<ProgressSlot>): ProgressSlot {
         }
       : r;
   }
+  const unlockedIds = Array.from(new Set([...(a.unlockedIds ?? []), ...(b.unlockedIds ?? [])]));
   return {
     scores: merged,
     diagnosticDone: a.diagnosticDone || (b.diagnosticDone ?? false),
     recommendedLevelId: a.recommendedLevelId ?? b.recommendedLevelId ?? null,
+    unlockedIds,
   };
 }
 
@@ -148,6 +155,7 @@ export const useGame = create<GameState>()(
           const recIdx = levelIndex(recId);
           if (recIdx >= 0 && idx <= recIdx) return true;
         }
+        if (slot.unlockedIds?.includes(levelId)) return true;
         return false;
       },
       toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
@@ -177,6 +185,20 @@ export const useGame = create<GameState>()(
           return {
             allProgress: { ...s.allProgress, [s.difficulty]: slot },
             diagnosticDone: true,
+          };
+        }),
+      applyUnlock: (difficulty, levelIds) =>
+        set((s) => {
+          const target = s.allProgress[difficulty] ?? emptySlot();
+          const nextUnlocked = Array.from(new Set([...(target.unlockedIds ?? []), ...levelIds]));
+          const nextSlot = { ...target, unlockedIds: nextUnlocked };
+          return {
+            allProgress: { ...s.allProgress, [difficulty]: nextSlot },
+            // Se está desbloqueando na dificuldade ativa, atualiza o espelho
+            // pra que a Home reaja sem precisar trocar de dificuldade.
+            ...(difficulty === s.difficulty
+              ? { scores: nextSlot.scores }
+              : {}),
           };
         }),
       resetProgress: () =>
@@ -213,7 +235,7 @@ export const useGame = create<GameState>()(
     }),
     {
       name: 'digitaai:progress',
-      version: 4,
+      version: 5,
       migrate: (persisted, fromVersion) => {
         const s = (persisted ?? {}) as Partial<GameState> & {
           scores?: Record<string, LevelScore>;
@@ -227,6 +249,7 @@ export const useGame = create<GameState>()(
             scores: s.scores ?? {},
             diagnosticDone: s.diagnosticDone ?? false,
             recommendedLevelId: s.recommendedLevelId ?? null,
+            unlockedIds: [],
           };
           const difficulty = (s.difficulty ?? 'normal') as Difficulty;
           const active = all[difficulty];
@@ -239,6 +262,15 @@ export const useGame = create<GameState>()(
             diagnosticDone: active.diagnosticDone,
             recommendedLevelId: active.recommendedLevelId,
           } as GameState;
+        }
+        // v<5: slots não tinham `unlockedIds`. Preenche com lista vazia.
+        if (fromVersion < 5) {
+          const all = s.allProgress ?? emptyAllProgress();
+          for (const key of ['easy', 'normal', 'hard'] as const) {
+            const slot = all[key] ?? emptySlot();
+            all[key] = { ...emptySlot(), ...slot, unlockedIds: slot.unlockedIds ?? [] };
+          }
+          return { ...s, allProgress: all } as GameState;
         }
         return s as GameState;
       },
