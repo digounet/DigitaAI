@@ -64,11 +64,12 @@ export function Admin() {
     let cancelled = false;
     let unsub: (() => void) | null = null;
     (async () => {
-      const [{ onAuthStateChanged }, { auth }, { isAdmin }] = await Promise.all([
-        import('firebase/auth'),
-        import('../firebase'),
-        import('../services/admin'),
-      ]);
+      const [{ onAuthStateChanged }, { auth }, { isAdmin, trySelfBootstrapAdmin }] =
+        await Promise.all([
+          import('firebase/auth'),
+          import('../firebase'),
+          import('../services/admin'),
+        ]);
       if (cancelled) return;
       unsub = onAuthStateChanged(auth, async (user) => {
         setCurrentUser(user);
@@ -76,7 +77,13 @@ export function Admin() {
           setAuthState('anonymous');
           return;
         }
-        const ok = await isAdmin(user);
+        let ok = await isAdmin(user);
+        // Bootstrap silencioso: usuários comuns são bloqueados pelas regras
+        // do Firestore; só quem as regras autorizarem consegue criar o doc.
+        if (!ok) {
+          const promoted = await trySelfBootstrapAdmin(user);
+          if (promoted) ok = await isAdmin(user);
+        }
         if (cancelled) return;
         setAuthState(ok ? 'admin' : 'non-admin');
         if (ok) await refreshCodes();

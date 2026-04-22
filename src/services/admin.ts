@@ -1,10 +1,14 @@
-import { doc, getDoc, serverTimestamp, setDoc, deleteDoc, getDocs, collection } from 'firebase/firestore';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+} from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { db } from '../firebase';
-
-/** Email que é admin por padrão, sem precisar de doc em `admins/*`. Útil pro
- *  bootstrap: quem não tem nenhum admin cadastrado começa por este. */
-export const ROOT_ADMIN_EMAIL = 'digounet@gmail.com';
 
 export type AdminDoc = {
   email: string;
@@ -12,14 +16,34 @@ export type AdminDoc = {
   addedAt: unknown;
 };
 
-/** Verifica se o usuário é admin. ROOT_ADMIN_EMAIL vale sempre; os demais
- *  precisam ter um doc em `admins/{uid}`. */
+/** Verifica se o usuário é admin consultando `admins/{uid}`. A lista de
+ *  admins é mantida SÓ no Firestore (e, por baixo, protegida por regras);
+ *  o cliente não conhece nenhum email privilegiado.
+ */
 export async function isAdmin(user: User | null | undefined): Promise<boolean> {
   if (!user || user.isAnonymous) return false;
-  if (user.email?.toLowerCase() === ROOT_ADMIN_EMAIL) return true;
   try {
     const snap = await getDoc(doc(db, 'admins', user.uid));
     return snap.exists();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Tenta criar um doc de admin pro próprio usuário. Usado no bootstrap: quem
+ * tem permissão (definida nas regras do Firestore) consegue; os demais são
+ * bloqueados pelo Firestore e este método resolve como `false`. Nenhum dado
+ * sensível volta pro cliente se a permissão não existir.
+ */
+export async function trySelfBootstrapAdmin(user: User): Promise<boolean> {
+  try {
+    await setDoc(doc(db, 'admins', user.uid), {
+      email: user.email ?? '',
+      addedBy: 'self-bootstrap',
+      addedAt: serverTimestamp(),
+    } satisfies AdminDoc);
+    return true;
   } catch {
     return false;
   }

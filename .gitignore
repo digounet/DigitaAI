@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Regras do Firestore — contem logica de admin e nao devem ser publicadas
+firestore.rules
