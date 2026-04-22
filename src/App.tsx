@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Play } from './pages/Play';
 import { MobileWarning } from './components/MobileWarning';
+import { UpdatePrompt } from './components/UpdatePrompt';
 import { useLeaderboardSync } from './hooks/useLeaderboardSync';
 import { useUserProgressSync } from './hooks/useUserProgressSync';
 import { useGame } from './store/gameStore';
@@ -49,6 +50,7 @@ function App() {
         </Routes>
       </Suspense>
       <MobileWarning />
+      <UpdatePrompt />
     </HashRouter>
   );
 }
