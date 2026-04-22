@@ -12,22 +12,33 @@ export type Difficulty = 'easy' | 'normal' | 'hard';
 
 /** Multiplica o `speed` (tempo de travessia) nos modos Balloon/Pie.
  *  >1 = mais lento (mais tempo pra digitar).
- *  Calibrado pra crianças: até o "difícil" mantém ritmo confortável.
- *  O antigo multiplier do normal (1.0) agora é o difícil. */
+ *  O gap entre normal e difícil foi ampliado pra que o difícil realmente
+ *  pareça mais difícil (antes era só 23% de diferença). */
 export const DIFFICULTY_SPEED_MULTIPLIER: Record<Difficulty, number> = {
   easy: 1.7,
-  normal: 1.3,
-  hard: 1.0,
+  normal: 1.35,
+  hard: 0.75,
 };
 
 /** Cap máximo de balões/tortas simultâneos por dificuldade.
  *  - fácil: 1 por vez (sem sobreposição, tempo de sobra pra criança).
  *  - normal: até 2, mas o spawn garante espaçamento horizontal.
- *  - difícil: respeita o `maxAtOnce` do nível (até 3). */
+ *  - difícil: permite 1 a mais que o nível define (piso 3), pra aumentar a pressão. */
 export function effectiveMaxAtOnce(base: number, difficulty: Difficulty): number {
   if (difficulty === 'easy') return 1;
   if (difficulty === 'normal') return Math.min(2, base);
-  return base;
+  return Math.max(base + 1, 3);
+}
+
+/** Ajusta a meta de PPM dos modos texto/escalada pela dificuldade.
+ *  - fácil: cobra 30% menos (mais fácil de tirar estrelas).
+ *  - normal: mantém a meta do nível.
+ *  - difícil: cobra 30% mais (estrelas exigem mais velocidade). */
+export function effectiveGoalWpm(goalWpm: number | undefined, difficulty: Difficulty): number | undefined {
+  if (goalWpm == null) return goalWpm;
+  if (difficulty === 'easy') return Math.max(1, Math.round(goalWpm * 0.7));
+  if (difficulty === 'hard') return Math.round(goalWpm * 1.3);
+  return goalWpm;
 }
 
 export type ProgressSlot = {
