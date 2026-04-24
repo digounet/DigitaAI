@@ -11,7 +11,7 @@ import { getLessonPosition, getWorldMeta, levelHasDigits } from '../data/levels'
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
-import { useGame, DIFFICULTY_SPEED_MULTIPLIER, effectiveMaxAtOncePies } from '../store/gameStore';
+import { useGame, effectiveMaxAtOnce, pieSpeedMultiplier } from '../store/gameStore';
 import { pickSpawnX } from '../utils/spawnX';
 
 function baseKey(ch: string): string {
@@ -74,7 +74,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   statsTotalRef.current = stats.total;
 
   const difficulty = useGame((s) => s.difficulty);
-  const speed = (level.speed ?? 10) * DIFFICULTY_SPEED_MULTIPLIER[difficulty];
+  const speed = (level.speed ?? 10) * pieSpeedMultiplier(difficulty);
 
   // Nudge de render depois do mount — mesma mitigação do BalloonMode pra
   // quando a navegação é por Enter e o keydown ainda está propagando.
@@ -109,7 +109,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   useEffect(() => {
     if (finished || paused) return;
     const baseMax = level.maxAtOnce ?? 2;
-    const maxAtOnce = effectiveMaxAtOncePies(baseMax, difficulty);
+    const maxAtOnce = effectiveMaxAtOnce(baseMax, difficulty);
     // Checa spawn rápido (700ms); aliveCount controla densidade.
     const every = 700;
     // Tortas são mais largas que balões: exige mais espaçamento horizontal.
@@ -159,10 +159,12 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
 
       let targetId = activeIdRef.current;
       if (targetId === null) {
-        // Só considera tortas que já passaram pela janela de graça.
-        const now = Date.now();
+        // Match pela primeira letra — sem checar `visibleAfter`. Grace só
+        // vale pra dica do teclado; se duas tortas estão na tela e a
+        // segunda ainda está no grace, digitar a primeira letra dela era
+        // contado como erro mesmo com a palavra visualmente subindo.
         const candidate = piesRef.current.find(
-          (p) => !p.popped && p.typed === '' && now >= p.visibleAfter && p.word[0].toLowerCase() === lk
+          (p) => !p.popped && p.typed === '' && p.word[0].toLowerCase() === lk
         );
         if (candidate) {
           targetId = candidate.id;

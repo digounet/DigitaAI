@@ -163,9 +163,14 @@ export function BalloonMode({ level, onFinish, onHome, onRetry, onNext }: Props)
       window.setTimeout(() => setLastKey((k) => (k === baseKey(ch) ? undefined : k)), 120);
       playKey();
 
-      const now = Date.now();
+      // Match por letra — NÃO checa `visibleAfter` aqui. Esse grace é usado
+      // só na dica do teclado (pra não revelar a letra antes do balão
+      // emergir). Se o usuário digitou uma letra que existe num balão na
+      // tela, ele claramente viu — pop. Caso contrário, dois balões
+      // simultâneos (ex.: J apareceu antes de F) geravam erro falso ao
+      // digitar o segundo enquanto o grace dele ainda estava contando.
       const target = balloonsRef.current.find(
-        (b) => !b.popped && now >= b.visibleAfter && b.letter.toLowerCase() === key
+        (b) => !b.popped && b.letter.toLowerCase() === key
       );
       if (target) {
         playPop();
