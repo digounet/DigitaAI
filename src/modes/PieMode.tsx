@@ -159,10 +159,12 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
 
       let targetId = activeIdRef.current;
       if (targetId === null) {
-        // Só considera tortas que já passaram pela janela de graça.
-        const now = Date.now();
+        // Match pela primeira letra — sem checar `visibleAfter`. Grace só
+        // vale pra dica do teclado; se duas tortas estão na tela e a
+        // segunda ainda está no grace, digitar a primeira letra dela era
+        // contado como erro mesmo com a palavra visualmente subindo.
         const candidate = piesRef.current.find(
-          (p) => !p.popped && p.typed === '' && now >= p.visibleAfter && p.word[0].toLowerCase() === lk
+          (p) => !p.popped && p.typed === '' && p.word[0].toLowerCase() === lk
         );
         if (candidate) {
           targetId = candidate.id;

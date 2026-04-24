@@ -34,11 +34,12 @@ export function pieSpeedMultiplier(difficulty: Difficulty): number {
 /** Cap máximo de balões/tortas simultâneos por dificuldade.
  *  - fácil: 1 por vez (sem sobreposição, tempo de sobra pra criança).
  *  - normal: até 2, mas o spawn garante espaçamento horizontal.
- *  - difícil: permite 1 a mais que o nível define (piso 3), pra aumentar a pressão. */
+ *  - difícil: respeita o cap desenhado pelo nível — a pressão extra vem da
+ *    velocidade, não de empilhar mais itens (que vira caos de atenção). */
 export function effectiveMaxAtOnce(base: number, difficulty: Difficulty): number {
   if (difficulty === 'easy') return 1;
   if (difficulty === 'normal') return Math.min(2, base);
-  return Math.max(base + 1, 3);
+  return base;
 }
 
 /** Ajusta a meta de PPM dos modos texto/escalada pela dificuldade.
