@@ -11,7 +11,7 @@ import { getLessonPosition, getWorldMeta, levelHasDigits } from '../data/levels'
 import { useTypingStats, starsFor } from '../hooks/useTypingStats';
 import { useTypingInput } from '../hooks/useTypingInput';
 import { playError, playKey, playPop, playWordDone, unlockAudio } from '../audio/sfx';
-import { useGame, DIFFICULTY_SPEED_MULTIPLIER, effectiveMaxAtOnce } from '../store/gameStore';
+import { useGame, DIFFICULTY_SPEED_MULTIPLIER, effectiveMaxAtOncePies } from '../store/gameStore';
 import { pickSpawnX } from '../utils/spawnX';
 
 function baseKey(ch: string): string {
@@ -109,7 +109,7 @@ export function PieMode({ level, onFinish, onHome, onRetry, onNext }: Props) {
   useEffect(() => {
     if (finished || paused) return;
     const baseMax = level.maxAtOnce ?? 2;
-    const maxAtOnce = effectiveMaxAtOnce(baseMax, difficulty);
+    const maxAtOnce = effectiveMaxAtOncePies(baseMax, difficulty);
     // Checa spawn rápido (700ms); aliveCount controla densidade.
     const every = 700;
     // Tortas são mais largas que balões: exige mais espaçamento horizontal.

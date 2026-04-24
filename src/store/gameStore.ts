@@ -20,7 +20,7 @@ export const DIFFICULTY_SPEED_MULTIPLIER: Record<Difficulty, number> = {
   hard: 0.75,
 };
 
-/** Cap máximo de balões/tortas simultâneos por dificuldade.
+/** Cap máximo de balões simultâneos por dificuldade.
  *  - fácil: 1 por vez (sem sobreposição, tempo de sobra pra criança).
  *  - normal: até 2, mas o spawn garante espaçamento horizontal.
  *  - difícil: permite 1 a mais que o nível define (piso 3), pra aumentar a pressão. */
@@ -28,6 +28,20 @@ export function effectiveMaxAtOnce(base: number, difficulty: Difficulty): number
   if (difficulty === 'easy') return 1;
   if (difficulty === 'normal') return Math.min(2, base);
   return Math.max(base + 1, 3);
+}
+
+/** Cap máximo de tortas (palavras/sequências) simultâneas por dificuldade.
+ *  Diferente dos balões: aqui cada item tem várias letras, então empilhar
+ *  mais tortas na tela vira teste de atenção/memorização (decidir qual
+ *  digitar, lembrar a ordem), não de digitação. Por isso o difícil NÃO
+ *  infla o número de itens — a pressão extra vem só da velocidade.
+ *  - fácil: 1 por vez.
+ *  - normal: até o valor do nível, limitado a 2.
+ *  - difícil: exatamente o que o nível desenhou (sem acréscimo nem piso). */
+export function effectiveMaxAtOncePies(base: number, difficulty: Difficulty): number {
+  if (difficulty === 'easy') return 1;
+  if (difficulty === 'normal') return Math.min(2, base);
+  return base;
 }
 
 /** Ajusta a meta de PPM dos modos texto/escalada pela dificuldade.
