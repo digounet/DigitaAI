@@ -51,14 +51,15 @@ export async function createUnlockCode(input: {
   const user = await getCurrentUser();
   if (!user) throw new Error('Faça login para criar códigos.');
 
+  const note = input.note?.trim();
   const payload: UnlockCodeDoc = {
     email: input.email.trim().toLowerCase(),
     difficulty: input.difficulty,
     levelIds: input.levelIds,
-    note: input.note?.trim() || undefined,
     createdBy: user.uid,
     createdByEmail: user.email ?? '',
     createdAt: serverTimestamp(),
+    ...(note ? { note } : {}),
   };
 
   for (let tries = 0; tries < 5; tries++) {
