@@ -3,10 +3,11 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // Publicado em https://digitai.app.br/ (domínio próprio no GitHub Pages).
-// base './' gera paths relativos, funcionando tanto na URL padrão
-// (digounet.github.io/DigitaAI/) quanto no domínio custom.
+// base '/' gera paths absolutos — necessário pro BrowserRouter, já que
+// rotas profundas (ex.: /play/abc, /artigos/xyz) são servidas pelo
+// 404.html do GitHub Pages e precisam carregar assets a partir da raiz.
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -41,12 +42,22 @@ export default defineConfig({
         navigateFallback: 'index.html',
         // AdSense, analytics e afins NUNCA são interceptados pelo SW — exigido
         // pelas políticas do AdSense e evita servir anúncios obsoletos.
+        // Páginas estáticas (institucional + blog) também ficam fora do
+        // fallback: cada uma é um .html real servido pelo GitHub Pages, e
+        // jogar o SPA shell por cima quebraria o conteúdo indexável.
         navigateFallbackDenylist: [
           /^\/pagead/,
           /googlesyndication\.com/,
           /doubleclick\.net/,
           /google-analytics\.com/,
           /googletagmanager\.com/,
+          /^\/sobre(\/.*)?$/,
+          /^\/contato(\/.*)?$/,
+          /^\/privacidade(\/.*)?$/,
+          /^\/termos(\/.*)?$/,
+          /^\/artigos(\/.*)?$/,
+          /^\/sitemap\.xml$/,
+          /^\/robots\.txt$/,
         ],
         runtimeCaching: [
           // Músicas: CacheFirst — primeira audição baixa, depois fica offline.

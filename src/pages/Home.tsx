@@ -508,6 +508,19 @@ export function Home() {
         })}
 
         <AdSlot slotId={import.meta.env.VITE_ADSENSE_SLOT_HOME as string | undefined} />
+
+        {/* Links pras páginas institucionais e pro blog. Tags <a> com href absoluto
+            (em vez de <Link>) porque essas rotas são páginas estáticas servidas
+            pelo GitHub Pages — fora do escopo do BrowserRouter. */}
+        <nav aria-label="Páginas institucionais" className="mt-8 mb-4 text-center">
+          <ul className="inline-flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-gray-600">
+            <li><a href="/artigos/" className="hover:text-grape underline-offset-4 hover:underline">📚 Artigos</a></li>
+            <li><a href="/sobre/" className="hover:text-grape underline-offset-4 hover:underline">Sobre</a></li>
+            <li><a href="/contato/" className="hover:text-grape underline-offset-4 hover:underline">Contato</a></li>
+            <li><a href="/privacidade/" className="hover:text-grape underline-offset-4 hover:underline">Privacidade</a></li>
+            <li><a href="/termos/" className="hover:text-grape underline-offset-4 hover:underline">Termos</a></li>
+          </ul>
+        </nav>
       </main>
 
       <div className="fixed bottom-3 right-3 z-20">
