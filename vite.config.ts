@@ -1,13 +1,27 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { resolve } from 'node:path';
 
 // Publicado em https://digitai.app.br/ (domínio próprio no GitHub Pages).
 // base '/' gera paths absolutos — necessário pro BrowserRouter, já que
-// rotas profundas (ex.: /play/abc, /artigos/xyz) são servidas pelo
-// 404.html do GitHub Pages e precisam carregar assets a partir da raiz.
+// rotas profundas (ex.: /jogar/play/abc) são servidas pelo 404.html do
+// GitHub Pages e precisam carregar assets a partir da raiz.
+//
+// Build multi-page:
+//   /          ← landing estática (raiz do projeto: index.html)
+//   /jogar/    ← SPA React (jogar/index.html)
+// Os artigos e páginas legais ficam em public/, copiados como estão.
 export default defineConfig({
   base: '/',
+  build: {
+    rollupOptions: {
+      input: {
+        landing: resolve(__dirname, 'index.html'),
+        app: resolve(__dirname, 'jogar/index.html'),
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -24,8 +38,10 @@ export default defineConfig({
         short_name: 'DigitAI',
         description: 'Curso de digitação infantil com balões, tortinhas e textos. Grátis, em português.',
         lang: 'pt-BR',
-        start_url: '.',
-        scope: '.',
+        // O SPA vive em /jogar/. A landing estática em / é o destino canônico
+        // dos crawlers; PWA instalado pula direto pro curso.
+        start_url: '/jogar/',
+        scope: '/jogar/',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#bde7ff',
@@ -39,7 +55,7 @@ export default defineConfig({
       workbox: {
         // Precache só do app shell — MP3s ficam fora pra não pesar a instalação.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,webp,ico}'],
-        navigateFallback: 'index.html',
+        navigateFallback: '/jogar/index.html',
         // AdSense, analytics e afins NUNCA são interceptados pelo SW — exigido
         // pelas políticas do AdSense e evita servir anúncios obsoletos.
         // Páginas estáticas (institucional + blog) também ficam fora do

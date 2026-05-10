@@ -330,6 +330,15 @@ export function Home() {
           >
             🏆 Ranking
           </Link>
+          {/* /artigos é uma página estática (HTML servido pelo GitHub Pages) —
+              fica fora do BrowserRouter, então usamos <a> para fazer navegação
+              de página inteira em vez de roteamento client-side. */}
+          <a
+            href="/artigos/"
+            className="bg-white/85 rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm"
+          >
+            📚 Artigos
+          </a>
           <Link
             to="/pro"
             className="bg-gradient-to-r from-grape to-candy text-white rounded-full px-4 py-2 shadow-pop hover:scale-105 active:scale-95 transition text-sm font-bold"
