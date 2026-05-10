@@ -40,7 +40,7 @@ function App() {
   useAudioSync();
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/jogar">
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<Home />} />

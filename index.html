@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-title" content="DigitAI" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#7fd4ff" />
+    <link rel="stylesheet" href="/site.css" />
+    <link rel="canonical" href="https://digitai.app.br/" />
 
     <title>DigitAI — Curso de digitação infantil grátis em português</title>
     <meta
@@ -17,30 +19,21 @@
     />
     <meta name="author" content="Pablo Rodrigo" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <link rel="canonical" href="https://digitai.app.br/" />
 
-    <!-- Open Graph / social sharing -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DigitAI" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:title" content="DigitAI — Curso de digitação infantil grátis em português" />
-    <meta
-      property="og:description"
-      content="Curso de digitação infantil em português com mais de 30 lições gamificadas. Touch typing no teclado ABNT2, com balões, tortinhas e mundos temáticos. Grátis."
-    />
+    <meta property="og:description" content="Curso de digitação infantil em português com mais de 30 lições gamificadas. Touch typing no teclado ABNT2, com balões, tortinhas e mundos temáticos. Grátis." />
     <meta property="og:image" content="https://digitai.app.br/logo-square.png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:url" content="https://digitai.app.br/" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="DigitAI — Curso de digitação infantil grátis" />
-    <meta
-      name="twitter:description"
-      content="Curso gamificado de digitação para crianças, em português. Mais de 30 lições com mascote, balões e mundos temáticos."
-    />
+    <meta name="twitter:description" content="Curso gamificado de digitação para crianças, em português." />
     <meta name="twitter:image" content="https://digitai.app.br/logo-square.png" />
 
-    <!-- Schema.org / dados estruturados -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -65,14 +58,11 @@
           {
             "@type": "WebApplication",
             "name": "DigitAI",
-            "url": "https://digitai.app.br/",
+            "url": "https://digitai.app.br/jogar/",
             "applicationCategory": "EducationalApplication",
             "operatingSystem": "Web, Android, iOS",
             "inLanguage": "pt-BR",
-            "audience": {
-              "@type": "EducationalAudience",
-              "educationalRole": "student"
-            },
+            "audience": { "@type": "EducationalAudience", "educationalRole": "student" },
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" },
             "description": "Curso de digitação infantil em português, gratuito, com lições gamificadas para crianças aprenderem touch typing no teclado ABNT2."
           }
@@ -80,34 +70,243 @@
       }
     </script>
 
-    <!-- Google AdSense — script de verificação + carregamento pré-requisitado. -->
+    <style>
+      .lp-hero {
+        text-align: center;
+        padding: 3rem 1rem 2rem;
+      }
+      .lp-hero h1 {
+        font-size: clamp(2.4rem, 5vw + 1rem, 4rem);
+        line-height: 1.05;
+        margin: 0 0 0.5rem;
+        font-weight: 800;
+      }
+      .lp-hero .b-candy { color: var(--candy); }
+      .lp-hero .b-grape { color: var(--grape); }
+      .lp-hero .lp-tag {
+        font-size: 1.25rem;
+        color: var(--ink-soft);
+        margin: 0 auto 1.75rem;
+        max-width: 640px;
+      }
+      .lp-cta-row {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+      }
+      .lp-cta-primary {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--candy), var(--grape));
+        color: #fff;
+        padding: 1rem 2rem;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        box-shadow: 0 12px 30px rgba(122, 60, 255, 0.3);
+      }
+      .lp-cta-primary:hover { filter: brightness(1.05); text-decoration: none; }
+      .lp-cta-secondary {
+        display: inline-block;
+        background: #fff;
+        color: var(--ink);
+        padding: 1rem 1.6rem;
+        border-radius: 999px;
+        font-weight: 700;
+        box-shadow: 0 6px 18px rgba(31, 41, 55, 0.08);
+      }
+      .lp-cta-secondary:hover { color: var(--grape); text-decoration: none; }
+      .lp-feature-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+      @media (min-width: 720px) {
+        .lp-feature-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+      .lp-feature {
+        background: #fff;
+        border-radius: 22px;
+        padding: 1.4rem;
+        box-shadow: 0 4px 20px rgba(31, 41, 55, 0.06);
+      }
+      .lp-feature .lp-emoji {
+        font-size: 2.5rem;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+      }
+      .lp-feature h3 { margin-top: 0; }
+      .lp-stripe {
+        background: linear-gradient(135deg, rgba(127, 212, 255, 0.18), rgba(122, 60, 255, 0.12));
+        border-radius: 28px;
+        padding: 2rem 1.5rem;
+        margin: 2.5rem 0;
+        text-align: center;
+      }
+      .lp-stripe h2 { margin-top: 0; }
+      .lp-final {
+        text-align: center;
+        padding: 2.5rem 1rem;
+      }
+    </style>
+
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9692729057490118" crossorigin="anonymous"></script>
+
+    <!-- Visitante recorrente: já entrou no curso pelo menos uma vez. Vai
+         direto pra /jogar/ pra não criar fricção. Crawler/visitante novo
+         (sem o flag) sempre vê a landing. Bots não têm localStorage,
+         portanto sempre indexam o conteúdo. -->
+    <script>
+      try {
+        if (localStorage.getItem('digitai_returning') === '1') {
+          location.replace('/jogar/');
+        }
+      } catch (e) { /* ignore */ }
+    </script>
   </head>
   <body>
-    <div id="root">
-      <!-- Conteúdo de fallback exibido enquanto o app carrega (e indexável por crawlers que não executam JS). -->
-      <noscript>
-        <main style="font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 1rem; line-height: 1.6;">
-          <h1>DigitAI — Aprender a digitar brincando</h1>
-          <p>
-            DigitAI é um curso de digitação infantil <strong>grátis e em português</strong>, criado para crianças aprenderem a digitar com touch typing no teclado ABNT2 de um jeito divertido. São mais de 30 lições gamificadas, com mascote, balões, tortinhas e mundos temáticos.
-          </p>
-          <p>
-            Este aplicativo precisa de JavaScript ativado para funcionar. Enquanto isso, você pode conhecer mais sobre o projeto:
-          </p>
-          <ul>
-            <li><a href="/sobre/">Sobre o DigitAI</a></li>
-            <li><a href="/artigos/">Artigos sobre ensino de digitação infantil</a></li>
-            <li><a href="/privacidade/">Política de privacidade</a></li>
-            <li><a href="/termos/">Termos de uso</a></li>
-            <li><a href="/contato/">Contato</a></li>
+    <nav class="site-nav" aria-label="Principal">
+      <div class="site-nav-inner">
+        <a class="site-brand" href="/" aria-label="DigitAI - página inicial">
+          <span class="b-candy">Digit</span><span class="b-grape">AI</span>
+          <span aria-hidden="true">🎈</span>
+        </a>
+        <ul>
+          <li><a href="/" aria-current="page">Início</a></li>
+          <li><a href="/artigos/">Artigos</a></li>
+          <li><a href="/sobre/">Sobre</a></li>
+          <li><a href="/contato/">Contato</a></li>
+          <li><a class="cta" href="/jogar/">Jogar</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>
+      <section class="lp-hero">
+        <h1>
+          <span class="b-candy">Digit</span><span class="b-grape">AI</span>
+          <span aria-hidden="true">🎈</span>
+        </h1>
+        <p class="lp-tag">
+          O jeito mais divertido das crianças aprenderem a digitar — com balões, tortinhas e mundos temáticos. <strong>Grátis</strong>, em português, no seu navegador.
+        </p>
+        <div class="lp-cta-row">
+          <a class="lp-cta-primary" href="/jogar/">▶ Abrir o curso grátis</a>
+          <a class="lp-cta-secondary" href="/artigos/">📚 Ler os artigos</a>
+        </div>
+      </section>
+
+      <section class="page" style="padding-top: 0.5rem;">
+        <h2>Um curso de digitação pensado para crianças brasileiras</h2>
+        <p>
+          O DigitAI é um curso online de digitação criado para que toda criança brasileira possa aprender a digitar com prazer, dentro ou fora da escola. Em vez do método antigo, baseado em listas de palavras e cronômetro, aqui a criança aprende em <strong>mundos temáticos com lições curtas e gamificadas</strong> — estoura balões, monta tortinhas e copia frases com o mascote ao lado.
+        </p>
+        <p>
+          O conteúdo é sequenciado: começa pela linha base (<code>A S D F · J K L Ç</code>) e avança até dominar todo o teclado <strong>ABNT2</strong>, com acentos, pontuação e maiúsculas. A meta é touch typing de verdade — digitar sem olhar para o teclado, com os dez dedos. Cada lição dá até três estrelinhas e desbloqueia a próxima.
+        </p>
+        <p>
+          Não pedimos cadastro pra começar, não tem assinatura escondida e o essencial é grátis para sempre. Se quiser saber mais sobre os princípios do projeto, leia <a href="/sobre/">Sobre o DigitAI</a>. Se for professor ou professora, dá uma olhada em <a href="/artigos/digitacao-na-escola-bncc/">Digitação na escola e BNCC</a>.
+        </p>
+
+        <div class="lp-feature-grid">
+          <div class="lp-feature">
+            <div class="lp-emoji">🎈</div>
+            <h3>Lições gamificadas</h3>
+            <p>Três modos de jogo (balões, tortinhas, textos) revezam a mesma habilidade por ângulos diferentes. A criança não satura.</p>
+          </div>
+          <div class="lp-feature">
+            <div class="lp-emoji">🌍</div>
+            <h3>Mundos temáticos</h3>
+            <p>Cada mundo agrupa lições por dificuldade. Da linha base aos acentos, com progressão clara e desbloqueio por estrelinhas.</p>
+          </div>
+          <div class="lp-feature">
+            <div class="lp-emoji">🏫</div>
+            <h3>Casa e escola</h3>
+            <p>Funciona no navegador, sem instalação. Em laboratório de informática roda em qualquer Chromebook ou PC antigo.</p>
+          </div>
+        </div>
+
+        <h2>Para quem é o DigitAI</h2>
+        <p>
+          Foi pensado para <strong>crianças a partir dos 6–7 anos</strong>, idade em que a coordenação motora fina já permite todo o teclado. Crianças mais velhas, pré-adolescentes e até adultos que aprenderam "olhando" o teclado também ganham — basta seguir o método. Mais sobre isso em <a href="/artigos/idade-certa-aprender-digitacao/">A idade certa para aprender digitação</a>.
+        </p>
+        <p>
+          Em casa, é uma forma de transformar 10 a 15 minutos de tela em prática produtiva. Em sala de aula, alinha-se às competências de letramento digital previstas na BNCC e funciona como laboratório no qual cada aluno avança no próprio ritmo.
+        </p>
+
+        <div class="lp-stripe">
+          <h2>Comece pelos artigos</h2>
+          <p>Antes de abrir o curso, vale entender o método.</p>
+          <ul class="article-list" style="margin-top: 1.5rem;">
+            <li>
+              <h3><a href="/artigos/como-ensinar-crianca-digitar/">Como ensinar uma criança a digitar: guia completo para pais</a></h3>
+              <p>Passo a passo realista, com rotina, expectativas por idade e o que evitar nos primeiros meses.</p>
+            </li>
+            <li>
+              <h3><a href="/artigos/posicao-correta-dedos-teclado-abnt2/">Posição correta dos dedos no teclado ABNT2</a></h3>
+              <p>Mapa completo de qual dedo bate em qual tecla, com o detalhe do "ç" e dos acentos brasileiros.</p>
+            </li>
+            <li>
+              <h3><a href="/artigos/touch-typing-digitacao-tatil/">O que é touch typing (digitação tátil)</a></h3>
+              <p>Por que digitar sem olhar é a meta, e o que muda no cérebro durante o aprendizado.</p>
+            </li>
+            <li>
+              <h3><a href="/artigos/erros-comuns-aprendizado-digitacao/">Erros comuns no aprendizado</a></h3>
+              <p>Os 7 vícios mais frequentes nos primeiros meses e como corrigir antes que virem permanentes.</p>
+            </li>
+            <li>
+              <h3><a href="/artigos/quanto-tempo-aprender-digitar/">Quanto tempo leva para aprender</a></h3>
+              <p>Curva realista por idade, com marcos de PPM que dá pra acompanhar em casa.</p>
+            </li>
+            <li>
+              <h3><a href="/artigos/ergonomia-criancas-computador/">Ergonomia para crianças no computador</a></h3>
+              <p>Mesa, cadeira, altura do teclado, distância da tela e a regra dos 20-20-20 adaptada à infância.</p>
+            </li>
           </ul>
-          <p>
-            Para usar o curso, ative o JavaScript no seu navegador e recarregue a página.
+          <p style="margin-top: 1.25rem;">
+            <a href="/artigos/">Ver todos os artigos →</a>
           </p>
-        </main>
-      </noscript>
-    </div>
-    <script type="module" src="/src/main.tsx"></script>
+        </div>
+
+        <h2>Como o DigitAI ensina, na prática</h2>
+        <p>
+          Cada lição roda em sessões de 2 a 5 minutos. A criança vê uma tela limpa com o teclado virtual destacando o dedo certo — não só a tecla. Esse detalhe é importante: o cérebro aprende a divisão de dedos na primeira semana, e isso fica para a vida.
+        </p>
+        <ol>
+          <li><strong>Apresentação da linha base.</strong> Os primeiros níveis treinam só as oito teclas centrais. Parece pouco, mas é o alicerce.</li>
+          <li><strong>Letras vizinhas.</strong> O teclado vai se abrindo aos poucos, sempre com retorno à base.</li>
+          <li><strong>Linhas completas.</strong> Quando a criança domina as três fileiras, começam a aparecer palavras e frases curtas.</li>
+          <li><strong>Acentos e pontuação.</strong> O peculiar do ABNT2: acento agudo, til, "ç" — tudo em mundo próprio.</li>
+          <li><strong>Velocidade.</strong> Vem por último. Quem persegue precisão primeiro chega mais longe.</li>
+        </ol>
+
+        <h2>Funciona offline e dá pra instalar como app</h2>
+        <p>
+          O DigitAI é um <em>Progressive Web App</em>: depois de aberto pela primeira vez, funciona sem internet (ótimo para o trajeto até a escola, ou pra quando o wi-fi cai). Em Android, dá pra "instalar" no celular como se fosse um aplicativo. Em desktop, abre no navegador como qualquer site, mas com botão "Instalar" pra quem prefere uma janela própria.
+        </p>
+      </section>
+
+      <section class="lp-final">
+        <h2>Pronto para começar?</h2>
+        <p style="color: var(--ink-soft); max-width: 540px; margin: 0 auto 1.5rem;">
+          Mais de 30 lições, três modos de jogo, mascote ao lado e tudo em português. Sem cadastro, sem custo, sem pegadinha.
+        </p>
+        <a class="lp-cta-primary" href="/jogar/">▶ Abrir o curso grátis</a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <ul>
+        <li><a href="/">Início</a></li>
+        <li><a href="/artigos/">Artigos</a></li>
+        <li><a href="/sobre/">Sobre</a></li>
+        <li><a href="/contato/">Contato</a></li>
+        <li><a href="/privacidade/">Privacidade</a></li>
+        <li><a href="/termos/">Termos</a></li>
+      </ul>
+      <div>© <span id="y"></span> DigitAI · Pablo Rodrigo · Aprender a digitar brincando</div>
+      <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+    </footer>
   </body>
 </html>
