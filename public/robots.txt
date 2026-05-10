@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# AdSense crawlers — explicitamente permitidos.
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /
+
+# Não há áreas privadas que justifiquem Disallow no momento.
+# O painel /admin é protegido por autenticação Firebase no client.
+
+Sitemap: https://digitai.app.br/sitemap.xml

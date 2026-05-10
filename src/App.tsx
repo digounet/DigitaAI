@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Play } from './pages/Play';
 import { MobileWarning } from './components/MobileWarning';
@@ -40,7 +40,7 @@ function App() {
   useAudioSync();
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -53,7 +53,7 @@ function App() {
       </Suspense>
       <MobileWarning />
       <UpdatePrompt />
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
